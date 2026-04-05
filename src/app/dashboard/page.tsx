@@ -27,7 +27,7 @@ import {
   import { Badge } from '@/components/ui/badge';
   import { IndianRupee, ShoppingCart, Percent, Activity } from 'lucide-react';
 import { PriceOptimizerForm } from '@/components/app/price-optimizer-form';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useUser } from '@/firebase';
 import { collection, query, where, doc, serverTimestamp } from 'firebase/firestore';
 import type { ChartConfig } from '@/components/ui/chart';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -73,25 +73,25 @@ import { sampleOrders } from '@/lib/placeholder-data';
     }), [t]);
 
     // Data fetching
-    const ordersQuery = useMemoFirebase(() => {
+    const ordersQuery = useMemo(() => {
         if (!firestore || !user) return null;
         return query(collection(firestore, 'users', user.uid, 'orders'));
     }, [firestore, user]);
     const { data: orders, isLoading: isLoadingOrders } = useCollection<any>(ordersQuery);
 
-    const productsQuery = useMemoFirebase(() => {
+    const productsQuery = useMemo(() => {
         if (!firestore) return null;
         return query(collection(firestore, 'products'));
     }, [firestore]);
     const { data: products, isLoading: isLoadingProducts } = useCollection<any>(productsQuery);
 
-    const listingsQuery = useMemoFirebase(() => {
+    const listingsQuery = useMemo(() => {
         if (!firestore || !user) return null;
         return query(collection(firestore, 'cropListings'), where('userId', '==', user.uid));
     }, [firestore, user]);
     const { data: listings, isLoading: isLoadingListings } = useCollection<any>(listingsQuery);
 
-    const offersQuery = useMemoFirebase(() => {
+    const offersQuery = useMemo(() => {
         if (!firestore || !user) return null;
         return query(collection(firestore, 'offers'), where('farmerId', '==', user.uid));
     }, [firestore, user]);

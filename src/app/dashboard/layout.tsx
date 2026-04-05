@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Header } from '@/components/app/header';
 import { CartProvider } from '@/hooks/use-cart';
@@ -26,7 +26,7 @@ export default function DashboardLayout({
   const firestore = useFirestore();
   const { setLanguage, t } = useLanguage();
 
-  const userProfileRef = useMemoFirebase(() => {
+  const userProfileRef = useMemo(() => {
     if (user?.uid && firestore) {
       return doc(firestore, 'users', user.uid);
     }
@@ -49,7 +49,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (userProfile) {
-      const buyerAllowedPaths = ['/dashboard/marketplace', '/dashboard/my-offers', '/dashboard/profile', '/dashboard/settings'];
+      const buyerAllowedPaths = ['/dashboard/marketplace', '/dashboard/my-offers', '/dashboard/profile', '/dashboard/settings', '/dashboard/transactions'];
       if (userProfile.role === 'buyer' && !buyerAllowedPaths.includes(pathname)) {
         router.push('/dashboard/marketplace');
       } else if (userProfile.role === 'farmer' && pathname === '/dashboard/marketplace') {

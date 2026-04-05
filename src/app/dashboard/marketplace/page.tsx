@@ -10,11 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useUser } from '@/firebase';
 import { collection, query, serverTimestamp } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import {
   Dialog,
@@ -261,7 +261,7 @@ const MarketplaceGrid = ({ isWholesale }: { isWholesale: boolean }) => {
     const firestore = useFirestore();
     const { t } = useLanguage();
     
-    const cropsQuery = useMemoFirebase(() => {
+    const cropsQuery = useMemo(() => {
         if (!firestore) return null;
         return query(collection(firestore, 'cropListings'));
     }, [firestore]);

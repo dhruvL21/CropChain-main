@@ -31,7 +31,7 @@ import {
     SelectValue,
   } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore, addDocumentNonBlocking, updateDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, addDocumentNonBlocking, updateDocumentNonBlocking, useCollection } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { useEffect, useMemo } from 'react';
 import { Switch } from '../ui/switch';
@@ -66,7 +66,7 @@ export function AddListingDialog({ open, onOpenChange, listingToEdit }: { open: 
   const { t, language } = useLanguage();
   const listingSchema = useListingSchema();
 
-  const customCropsQuery = useMemoFirebase(() => {
+  const customCropsQuery = useMemo(() => {
     if (!firestore) return null;
     return collection(firestore, 'custom_crops');
   }, [firestore]);

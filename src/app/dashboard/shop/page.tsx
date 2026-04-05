@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { ShoppingCart } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -120,7 +120,7 @@ export default function ShopPage() {
   const isMobile = useIsMobile();
   const { t } = useLanguage();
 
-  const productsQuery = useMemoFirebase(() => {
+  const productsQuery = useMemo(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'products'));
   }, [firestore]);

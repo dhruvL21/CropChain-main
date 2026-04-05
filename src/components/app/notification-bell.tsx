@@ -10,9 +10,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useCollection, useFirestore, useUser, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useUser, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
 import Link from 'next/link';
+import { useMemo } from 'react';
 import { Badge } from '../ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { useLanguage } from '@/hooks/use-language';
@@ -23,7 +24,7 @@ export function NotificationBell() {
     const { user } = useUser();
     const { t } = useLanguage();
 
-    const notificationsQuery = useMemoFirebase(() => {
+    const notificationsQuery = useMemo(() => {
         if (!firestore || !user) return null;
         return query(
             collection(firestore, 'users', user.uid, 'notifications'),

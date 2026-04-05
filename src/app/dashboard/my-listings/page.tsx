@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useUser } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -120,7 +120,7 @@ export default function MyListingsPage() {
     const [listingToEdit, setListingToEdit] = useState<any | null>(null);
     const { t } = useLanguage();
 
-    const listingsQuery = useMemoFirebase(() => {
+    const listingsQuery = useMemo(() => {
         if (!firestore || !user) return null;
         return query(collection(firestore, 'cropListings'), where('userId', '==', user.uid));
     }, [firestore, user]);

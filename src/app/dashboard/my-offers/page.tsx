@@ -17,7 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useUser } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/hooks/use-language';
@@ -29,7 +29,7 @@ export default function MyOffersPage() {
     const { user } = useUser();
     const { t } = useLanguage();
 
-    const offersQuery = useMemoFirebase(() => {
+    const offersQuery = useMemo(() => {
         if (!firestore || !user) return null;
         return query(collection(firestore, 'offers'), where('buyerId', '==', user.uid));
     }, [firestore, user]);

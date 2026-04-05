@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
 import { useLanguage } from "@/hooks/use-language";
 import { Skeleton } from '@/components/ui/skeleton';
@@ -47,7 +47,7 @@ export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
 
-    const userProfileRef = useMemoFirebase(() => {
+    const userProfileRef = useMemo(() => {
         if (user?.uid && firestore) {
             return doc(firestore, 'users', user.uid);
         }
@@ -57,20 +57,20 @@ export default function ProfilePage() {
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
     
     // Farmer stats
-    const farmerListingsQuery = useMemoFirebase(() => {
+    const farmerListingsQuery = useMemo(() => {
         if (!firestore || !user || userProfile?.role !== 'farmer') return null;
         return query(collection(firestore, 'cropListings'), where('userId', '==', user.uid));
     }, [firestore, user, userProfile?.role]);
     const { data: farmerListings, isLoading: isLoadingFarmerListings } = useCollection(farmerListingsQuery);
 
-    const farmerOffersQuery = useMemoFirebase(() => {
+    const farmerOffersQuery = useMemo(() => {
         if (!firestore || !user || userProfile?.role !== 'farmer') return null;
         return query(collection(firestore, 'offers'), where('farmerId', '==', user.uid));
     }, [firestore, user, userProfile?.role]);
     const { data: farmerOffers, isLoading: isLoadingFarmerOffers } = useCollection(farmerOffersQuery);
 
     // Buyer stats
-    const buyerOffersQuery = useMemoFirebase(() => {
+    const buyerOffersQuery = useMemo(() => {
         if (!firestore || !user || userProfile?.role !== 'buyer') return null;
         return query(collection(firestore, 'offers'), where('buyerId', '==', user.uid));
     }, [firestore, user, userProfile?.role]);
