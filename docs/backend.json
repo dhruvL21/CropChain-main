@@ -1,0 +1,616 @@
+
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the AgriNexus application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "The phone number of the user."
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user (e.g., farmer, buyer, admin)."
+        },
+        "language": {
+          "type": "string",
+          "description": "The preferred language of the user."
+        },
+        "farmName": {
+          "type": "string",
+          "description": "The name of the user's farm, if applicable."
+        },
+        "farmAddress": {
+          "type": "string",
+          "description": "The address of the user's farm, if applicable."
+        },
+        "companyName": {
+          "type": "string",
+          "description": "The name of the user's company, if applicable."
+        },
+        "businessType": {
+          "type": "string",
+          "description": "The type of business for a buyer (e.g., wholesaler, retailer)."
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "role"
+      ]
+    },
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a product available in the Farmer Shop.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the product."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the product."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the product."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the product image.",
+          "format": "uri"
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the product."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the product (e.g., Seeds, Fertilizers)."
+        },
+        "unit": {
+          "type": "string",
+          "description": "The unit of the product (e.g., kg, liter)."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "price",
+        "category"
+      ]
+    },
+    "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Order",
+      "type": "object",
+      "description": "Represents an order placed by a user, either from the Farmer Shop or the Marketplace.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the order."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User (the owner of this order document, e.g., the farmer receiving the order)."
+        },
+        "buyerId": {
+          "type": "string",
+          "description": "Reference to User (the buyer who placed the order)."
+        },
+        "buyerName": {
+          "type": "string",
+          "description": "The name of the buyer who placed the order."
+        },
+        "orderDate": {
+          "type": "string",
+          "description": "The date the order was placed.",
+          "format": "date-time"
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "The total amount of the order."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the order (e.g., Processing, Shipped, Delivered)."
+        },
+        "shippingAddress": {
+          "type": "string",
+          "description": "The shipping address for the order."
+        },
+        "items": {
+          "type": "array",
+          "description": "An array of items included in the order.",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "userId",
+        "buyerId",
+        "orderDate",
+        "totalAmount",
+        "status"
+      ]
+    },
+    "OrderItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "OrderItem",
+      "type": "object",
+      "description": "Represents an item within an order.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the order item."
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Reference to Order. (Relationship: Order 1:N OrderItem)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to Product. (Relationship: Product 1:N OrderItem)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity of the product in the order item."
+        },
+        "pricePerUnit": {
+          "type": "number",
+          "description": "The price per unit of the product at the time of the order."
+        }
+      },
+      "required": [
+        "id",
+        "orderId",
+        "productId",
+        "quantity",
+        "pricePerUnit"
+      ]
+    },
+    "CropListing": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CropListing",
+      "type": "object",
+      "description": "Represents a crop listing in the Farmer Marketplace.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the crop listing."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User (Farmer). (Relationship: User 1:N CropListing)"
+        },
+        "cropName": {
+          "type": "string",
+          "description": "The name of the crop."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the crop image.",
+          "format": "uri"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The available quantity of the crop."
+        },
+        "unit": {
+          "type": "string",
+          "description": "The unit of measurement for the quantity (e.g., kg, ton)."
+        },
+        "wholesalePrice": {
+          "type": "number",
+          "description": "The wholesale price per unit of the crop."
+        },
+        "retailPrice": {
+          "type": "number",
+          "description": "The retail price per unit of the crop."
+        },
+        "qualityGrade": {
+          "type": "string",
+          "description": "The quality grade of the crop (e.g., A, B, C)."
+        },
+        "certifications": {
+          "type": "string",
+          "description": "Any certifications the crop has (e.g., organic)."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "cropName",
+        "quantity",
+        "unit",
+        "wholesalePrice",
+        "retailPrice",
+        "qualityGrade"
+      ]
+    },
+    "MarketTrend": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MarketTrend",
+      "type": "object",
+      "description": "Represents a market trend for a specific crop.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the market trend."
+        },
+        "cropName": {
+          "type": "string",
+          "description": "The name of the crop the trend applies to."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date the trend was recorded.",
+          "format": "date-time"
+        },
+        "demand": {
+          "type": "number",
+          "description": "The demand for the crop."
+        },
+        "supply": {
+          "type": "number",
+          "description": "The supply of the crop."
+        },
+        "price": {
+          "type": "number",
+          "description": "The average price of the crop."
+        }
+      },
+      "required": [
+        "id",
+        "cropName",
+        "date",
+        "demand",
+        "supply",
+        "price"
+      ]
+    },
+    "Offer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Offer",
+      "type": "object",
+      "description": "Represents an offer made by a buyer for a crop listing.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the offer."
+        },
+        "cropListingId": {
+          "type": "string",
+          "description": "Reference to the CropListing."
+        },
+        "farmerId": {
+          "type": "string",
+          "description": "Reference to the User (Farmer)."
+        },
+        "buyerId": {
+          "type": "string",
+          "description": "Reference to the User (Buyer)."
+        },
+        "buyerName": {
+          "type": "string",
+          "description": "The name of the buyer who made the offer."
+        },
+        "cropName": {
+          "type": "string",
+          "description": "The name of the crop."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity of the crop being offered for."
+        },
+        "unit": {
+          "type": "string",
+          "description": "The unit of measurement for the quantity (e.g., kg, ton)."
+        },
+        "offerPrice": {
+          "type": "number",
+          "description": "The price per unit offered by the buyer."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the offer (e.g., pending, accepted, rejected).",
+          "enum": [
+            "pending",
+            "accepted",
+            "rejected"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the offer was created."
+        }
+      },
+      "required": [
+        "cropListingId",
+        "farmerId",
+        "buyerId",
+        "buyerName",
+        "cropName",
+        "quantity",
+        "unit",
+        "offerPrice",
+        "status",
+        "createdAt"
+      ]
+    },
+    "Notification": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Notification",
+      "description": "Represents a user notification, e.g., for an offer status change. Stores a translation key and payload for dynamic, client-side translation.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the notification."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user this notification is for."
+        },
+        "messageKey": {
+          "type": "string",
+          "description": "The localization key for the notification message."
+        },
+        "messagePayload": {
+          "type": "object",
+          "description": "A payload of values to be interpolated into the notification message."
+        },
+        "link": {
+          "type": "string",
+          "description": "A URL to navigate to when the notification is clicked."
+        },
+        "read": {
+          "type": "boolean",
+          "description": "Whether the user has read the notification."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the notification was created."
+        }
+      },
+      "required": [
+        "userId",
+        "messageKey",
+        "read",
+        "createdAt"
+      ]
+    },
+    "CustomCrop": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CustomCrop",
+      "description": "A crop name added by a user.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the crop."
+        },
+        "addedBy": {
+          "type": "string",
+          "description": "UID of the user who added it."
+        }
+      },
+      "required": [
+        "name",
+        "addedBy"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous",
+      "google.com"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. Path-based ownership ensures only the user can access their profile data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Stores product information for the Farmer Shop. This is globally accessible, assuming no personalized content.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The unique identifier of the product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Stores orders placed by users. Hierarchical paths enforce ownership, allowing users to only view/manage their orders.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "orderId",
+              "description": "The unique identifier of the order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/orders/{orderId}/orderItems/{orderItemId}",
+        "definition": {
+          "entityName": "OrderItem",
+          "schema": {
+            "$ref": "#/backend/entities/OrderItem"
+          },
+          "description": "Nested data for order items related to a specific order.",
+          "params": [
+            {
+              "name": "orderId",
+              "description": "The unique identifier of the order."
+            },
+            {
+              "name": "orderItemId",
+              "description": "The unique identifier of the order item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/cropListings/{cropListingId}",
+        "definition": {
+          "entityName": "CropListing",
+          "schema": {
+            "$ref": "#/backend/entities/CropListing"
+          },
+          "description": "Stores crop listings in the Farmer Marketplace. Globally accesible, requires no personalized content.",
+          "params": [
+            {
+              "name": "cropListingId",
+              "description": "The unique identifier of the crop listing."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/marketTrends/{marketTrendId}",
+        "definition": {
+          "entityName": "MarketTrend",
+          "schema": {
+            "$ref": "#/backend/entities/MarketTrend"
+          },
+          "description": "Stores market trends for crops. Globally accesible, requires no personalized content.",
+          "params": [
+            {
+              "name": "marketTrendId",
+              "description": "The unique identifier of the market trend."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{userId}",
+        "definition": {
+          "entityName": "roles_admin",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Indicates admin roles. Existence of a document grants admin privileges.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/offers/{offerId}",
+        "definition": {
+          "entityName": "Offer",
+          "schema": {
+            "$ref": "#/backend/entities/Offer"
+          },
+          "description": "Stores offers made by buyers on crop listings.",
+          "params": [
+            {
+              "name": "offerId",
+              "description": "The unique identifier of the offer."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/notifications/{notificationId}",
+        "definition": {
+          "entityName": "Notification",
+          "schema": {
+            "$ref": "#/backend/entities/Notification"
+          },
+          "description": "Stores notifications for a user, such as offer status updates.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user receiving the notification."
+            },
+            {
+              "name": "notificationId",
+              "description": "The unique identifier of the notification."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/custom_crops/{cropId}",
+        "definition": {
+          "entityName": "CustomCrop",
+          "schema": {
+            "$ref": "#/backend/entities/CustomCrop"
+          },
+          "description": "Stores custom crop names added by users. The document ID is a sanitized version of the crop name.",
+          "params": [
+            {
+              "name": "cropId",
+              "description": "The unique, sanitized identifier for the custom crop."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support AgriNexus's core features (Farmer Shop, Farmer Marketplace, Smart Dashboard, and AI Assistant) while adhering to the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). Authorization Independence is achieved through denormalization of user roles where needed, eliminating `get()` calls in security rules. Structural Segregation ensures that collections have homogeneous security postures. Access Modeling uses consistent patterns for ownership and collaboration. QAPs are supported by segregating data based on access needs and using membership maps for collaborative data.\n\nSpecifically:\n\n*   **/users/{userId}**: Stores user profiles. Path-based ownership ensures only the user can access their profile data.\n*   **/products/{productId}**: Stores product information for the Farmer Shop. This is globally accessible, assuming no personalized content, so QAPs are met.\n*   **/users/{userId}/orders/{orderId}**: Stores orders placed by users. Hierarchical paths enforce ownership, allowing users to only view/manage their orders.\n*   **/orders/{orderId}/orderItems/{orderItemId}**: Nested data for order items related to a specific order.\n*   **/cropListings/{cropListingId}**: Stores crop listings in the Farmer Marketplace, globally accesible. Requires no personalized content, so QAPs are met.\n*   **/marketTrends/{marketTrendId}**: Stores market trends for crops. Globally accesible, requires no personalized content, so QAPs are met.\n*   **/roles_admin/{userId}**: Indicates admin roles. Existence of a document grants admin privileges."
+  }
+}

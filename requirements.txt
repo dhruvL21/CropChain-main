@@ -1,0 +1,3 @@
+This is a Next.js (JavaScript/TypeScript) project. Dependencies are managed in the `package.json` file, not here.
+
+Please see the "Getting Started" section in the README.md file for instructions on how to install dependencies and run the application.

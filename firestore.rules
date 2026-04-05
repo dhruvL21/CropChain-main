@@ -1,0 +1,253 @@
+/**
+ * Core Philosophy: This ruleset establishes a hybrid security model tailored for the AgriNexus application.
+ * It combines strict, path-based user ownership for private data with a role-based access control (RBAC)
+ * system for administrative actions on public data. The default posture is secure, denying all access
+ * unless explicitly granted.
+ *
+ * Data Structure:
+ * - /users/{userId}/*: All user-specific, private data (profiles, orders) is nested under this path.
+ *   Access is strictly limited to the authenticated user whose UID matches {userId}.
+ * - /products, /cropListings, /marketTrends: These are top-level collections for publicly readable data.
+ *   Write access to this data is restricted to either the content owner (for crop listings) or
+ *   administrators (for products and trends).
+ * - /roles_admin/{userId}: A private collection used by the ruleset to identify administrators. It is
+ *   not readable or writable by any client to prevent role enumeration or role elevation.
+ *
+ * Key Security Decisions:
+ * - User Isolation: Users are strictly sandboxed to their own data trees under /users/{userId}. They cannot
+ *   read, write, or even list the contents of another user's private data.
+ * - Admin Privileges: An `isAdmin()` function checks for the existence of a document in the `/roles_admin`
+ *   collection. This provides a centralized and secure way to manage administrative write access to
+ *   globally-readable collections like `/products` and `/marketTrends`.
+ * - Public Content Ownership: For user-generated public content, like `/cropListings`, the rules enforce
+ *   an ownership model. Anyone can read the listings, but only the original author (verified via a `userId`
+ *   field on the document) can create, update, or delete them. This prevents data tampering.
+ * - Corrected Path for OrderItems: The IR suggested a disconnected path for `orderItems`. To ensure security
+ *   and relational integrity, this ruleset implements the logical and secure path for order items as a
+ *   subcollection of a user's specific order: `/users/{userId}/orders/{orderId}/orderItems/{orderItemId}`.
+ *
+ * Denormalization for Authorization:
+ * - To enforce ownership on `/cropListings` documents, a `userId` field is required directly on each document.
+ *   This allows for a fast and efficient security rule (`resource.data.userId == request.auth.uid`) without
+ *   needing slow, costly `get()` calls to other collections.
+ * - Administrator roles are managed by the existence of a document in `/roles_admin/{userId}`. This allows
+ *   any rule to perform a fast `exists()` check to verify admin status.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------------------------------------------------
+    // Helper Functions
+    // ----------------------------------------------------------------------
+
+    /**
+     * Verifies that a user is signed into the application.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Verifies that the requesting user's UID matches the provided userId.
+     * This is the foundation of the user-ownership model.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Verifies ownership for an existing document. Used for safe updates and deletes.
+     * Ensures the operation targets an existing document owned by the user.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Checks if the requesting user has administrative privileges.
+     * This is determined by the existence of their UID in the /roles_admin collection.
+     */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+    
+    /**
+     * Checks if a document exists. Used for safe updates and deletes for admins.
+     */
+    function isExistingDoc() {
+        return resource != null;
+    }
+
+
+    // ----------------------------------------------------------------------
+    // User Data
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Controls access to a user's own profile document.
+     * @path /users/{userId}
+     * @allow (create) An authenticated user creating their own profile document for the first time.
+     * @deny (get) User 'A' trying to read the profile of User 'B'.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Disallow listing all users for security and privacy.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Controls access to a user's orders, nested under their profile.
+       * @path /users/{userId}/orders/{orderId}
+       * @allow (list) A user listing their own past orders.
+       * @deny (create) An anonymous user trying to create an order.
+       * @principle Enforces data ownership through hierarchical paths.
+       */
+      match /orders/{orderId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        // A buyer can create an order in a farmer's subcollection.
+        // The document's 'buyerId' must match the creator's UID.
+        // The document's 'userId' must match the farmer's UID from the path.
+        allow create: if isSignedIn() && request.resource.data.buyerId == request.auth.uid && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+
+        /**
+         * @description Controls access to the items within a specific user order.
+         * @path /users/{userId}/orders/{orderId}/orderItems/{orderItemId}
+         * @allow (get) A user reading the details of an item in their own order.
+         * @deny (update) User 'A' trying to change the quantity of an item in an order belonging to User 'B'.
+         * @principle Inherits ownership rules from the parent document path.
+         */
+        match /orderItems/{orderItemId} {
+          allow get: if isOwner(userId);
+          allow list: if isOwner(userId);
+          allow create: if isOwner(userId) && request.resource.data.orderId == orderId;
+          allow update: if isExistingOwner(userId) && request.resource.data.orderId == resource.data.orderId;
+          allow delete: if isExistingOwner(userId);
+        }
+      }
+
+      /**
+       * @description Controls access to a user's notifications.
+       * @path /users/{userId}/notifications/{notificationId}
+       * @allow (list) A user listing their own notifications.
+       * @allow (create) An authenticated user creating a notification for another user (e.g., a farmer notifying a buyer).
+       * @principle Enforces data ownership for reads, but allows creation from trusted client logic.
+       */
+      match /notifications/{notificationId} {
+        allow get, list, update, delete: if isOwner(userId);
+        allow create: if isSignedIn();
+      }
+    }
+
+    // ----------------------------------------------------------------------
+    // Public & Admin-Managed Collections
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Controls access to the Farmer Shop product catalog.
+     * @path /products/{productId}
+     * @allow (get) Any user, including anonymous ones, reading product details.
+     * @deny (create) A non-administrative user trying to add a new product.
+     * @principle Allows public read access but restricts all writes to administrators.
+     */
+    match /products/{productId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+
+    /**
+     * @description Controls access to crop listings in the marketplace.
+     * @path /cropListings/{cropListingId}
+     * @allow (create) An authenticated farmer creating a new listing for their crops.
+     * @deny (update) A farmer trying to change the price on another farmer's listing.
+     * @principle Allows public read access while enforcing document ownership for all writes.
+     */
+    match /cropListings/{cropListingId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingDoc() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId;
+      allow delete: if isSignedIn() && isExistingDoc() && resource.data.userId == request.auth.uid;
+    }
+
+    /**
+     * @description Controls access to market trend data.
+     * @path /marketTrends/{marketTrendId}
+     * @allow (list) Any user, including anonymous ones, viewing market trend data.
+     * @deny (delete) A regular signed-in user trying to delete a market trend entry.
+     * @principle Allows public read access but restricts all writes to administrators.
+     */
+    match /marketTrends/{marketTrendId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+    
+    /**
+     * @description Controls access to offers made by buyers on crop listings.
+     * @path /offers/{offerId}
+     * @allow (create) A buyer creating an offer for a crop.
+     * @deny (update) A buyer trying to change an offer after it has been made.
+     * @principle Allows buyers to create offers, and farmers to view and manage them.
+     */
+    match /offers/{offerId} {
+      allow read: if isSignedIn() && (resource.data.buyerId == request.auth.uid || resource.data.farmerId == request.auth.uid);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.buyerId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.farmerId == request.auth.uid;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Secures the admin role collection.
+     * @path /roles_admin/{userId}
+     * @allow None. This collection is managed server-side.
+     * @deny (get, list, create, update, delete) Any client attempting any operation.
+     * @principle Prevents clients from reading or modifying administrative roles.
+     */
+    match /roles_admin/{userId} {
+      allow get: if false;
+      allow list: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Controls access to user-added custom crop names.
+     * @path /custom_crops/{cropId}
+     * @allow (list, get) Any user can read the list of custom crops.
+     * @allow (create) An authenticated user can add a new crop name.
+     * @deny (update, delete) Custom crops cannot be modified or deleted via the client.
+     * @principle Allows community-driven extension of crop types while preventing vandalism.
+     */
+    match /custom_crops/{cropId} {
+      allow read: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.addedBy == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    /**
+     * @description Controls access to escrow payments.
+     * @path /escrowPayments/{paymentId}
+     */
+    match /escrowPayments/{paymentId} {
+      allow read: if isSignedIn() && (resource.data.buyerId == request.auth.uid || resource.data.farmerId == request.auth.uid);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.buyerId == request.auth.uid;
+      allow update: if isSignedIn() && (resource.data.buyerId == request.auth.uid || resource.data.farmerId == request.auth.uid);
+      allow delete: if false;
+    }
+  }
+}

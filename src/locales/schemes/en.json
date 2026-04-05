@@ -1,0 +1,64 @@
+{
+    "schemes": [
+        {
+            "id": "pm-kisan",
+            "title": "Pradhan Mantri Kisan Samman Nidhi (PM-KISAN)",
+            "description": "A central sector scheme with 100% funding from the Government of India to supplement the financial needs of all landholding farmers' families in procuring various inputs to ensure proper crop health and appropriate yields, commensurate with the anticipated farm income.",
+            "eligibility": "All landholding farmer families with cultivable landholding in their names are eligible. Certain categories like institutional landholders, farmer families where one or more members hold or held constitutional posts, professionals like doctors and engineers, and pensioners with a monthly pension of ₹10,000 or more are excluded.",
+            "benefits": "Financial benefit of ₹6,000 per year per family, payable in three equal installments of ₹2,000 each, every four months, directly credited to the bank accounts of the beneficiaries.",
+            "incomeCriteria": "There is no specific income criterion, but an exclusion is in place for all income tax payers in the last assessment year. This rule applies to professionals as well.",
+            "documentsRequired": "Aadhaar card is mandatory. In addition, citizenship certificate, landholding papers, and bank account details are required.",
+            "link": "https://pmkisan.gov.in/"
+        },
+        {
+            "id": "pmfby",
+            "title": "Pradhan Mantri Fasal Bima Yojana (PMFBY)",
+            "description": "The flagship crop insurance scheme of the Government of India. It aims to provide a comprehensive insurance cover against failure of the crop, thus stabilizing the income of farmers to ensure their continuance in farming.",
+            "eligibility": "All farmers including sharecroppers and tenant farmers growing notified crops in the notified areas are eligible for coverage. The scheme is optional for all farmers.",
+            "benefits": "Provides insurance coverage and financial support to the farmers in the event of failure of any of the notified crop as a result of natural calamities, pests & diseases. It also encourages farmers to adopt innovative and modern agricultural practices.",
+            "incomeCriteria": "No income criteria. It is based on the crops and area notified by the State Government. The premium to be paid by farmers is fixed at 2% for all Kharif crops, 1.5% for all Rabi crops, and 5% for annual commercial and horticultural crops.",
+            "documentsRequired": "Land records (Record of Rights), Bank account details (for claim payment), Aadhaar card, and a crop sowing declaration.",
+            "link": "https://pmfby.gov.in/"
+        },
+        {
+            "id": "kcc",
+            "title": "Kisan Credit Card (KCC) Scheme",
+            "description": "A scheme to provide adequate and timely credit support from the banking system to farmers for their cultivation and other needs. It aims to meet the short term credit requirements for cultivation of crops, post-harvest expenses, and consumption requirements of farmer households.",
+            "eligibility": "All farmers, individuals/joint borrowers who are owner cultivators, tenant farmers, oral lessees, and sharecroppers. Self Help Groups (SHGs) or Joint Liability Groups (JLGs) of farmers are also eligible.",
+            "benefits": "Access to credit at a subsidized interest rate (as low as 4% upon prompt repayment). The card can be used for purchasing agricultural inputs like seeds, fertilizers, and for drawing cash for production needs. It also provides insurance coverage for death or permanent disability.",
+            "incomeCriteria": "No specific income criteria. The credit limit is determined by the bank based on factors like land holding, cropping pattern, and scale of finance.",
+            "documentsRequired": "Completed application form, Proof of Identity (e.g., Aadhaar Card, PAN card, Voter ID), Proof of Address, Land documents, and a passport size photograph.",
+            "link": "https://www.sbi.co.in/web/agri-rural/agriculture-banking/crop-finance/kisan-credit-card"
+        },
+        {
+            "id": "soil-health-card",
+            "title": "Soil Health Card Scheme",
+            "description": "A scheme to help farmers improve soil fertility on a sustainable basis. The scheme provides farmers with soil health cards which carry crop-wise recommendations of nutrients and fertilizers required for the individual farms.",
+            "eligibility": "All farmers in the country are eligible to get the soil health card for their land holdings, with analysis done once every 2 years.",
+            "benefits": "Helps in judicious use of fertilizers, thus saving money and improving long-term soil health. It promotes integrated nutrient management and leads to increased productivity.",
+            "incomeCriteria": "No income criteria. The scheme is available to all farmers free of cost.",
+            "documentsRequired": "Generally, no documents are required from the farmer. Soil samples are collected by agricultural department officials in the presence of the farmer. The farmer needs to provide basic details about their land and crops.",
+            "link": "https://soilhealth.dac.gov.in/"
+        },
+        {
+            "id": "e-nam",
+            "title": "National Agriculture Market (e-NAM)",
+            "description": "A pan-India electronic trading portal which networks the existing APMC (Agricultural Produce Market Committee) mandis to create a unified national market for agricultural commodities.",
+            "eligibility": "Farmers, traders, and buyers who are registered with any of the state APMCs integrated with the e-NAM portal.",
+            "benefits": "Provides a transparent and competitive online trading platform. Farmers can showcase their produce online from their nearest market and traders can quote prices from anywhere. It ensures better price discovery and smooth marketing of the produce.",
+            "incomeCriteria": "No income criteria. It is a trading platform open to all registered participants.",
+            "documentsRequired": "For farmers, registration is done at the APMC gate. For traders, an APMC trading license, bank account details, and identification are required.",
+            "link": "https://www.enam.gov.in/web/"
+        },
+        {
+            "id": "pkvy",
+            "title": "Paramparagat Krishi Vikas Yojana (PKVY)",
+            "description": "A sub-component of Soil Health Management (SHM) scheme under National Mission of Sustainable Agriculture (NMSA). PKVY aims at supporting and promoting organic farming, in turn resulting in improvement of soil health.",
+            "eligibility": "Farmers in a cluster of 50 acres of land. The scheme encourages farmers to form groups or clusters and take up organic farming.",
+            "benefits": "Farmers are provided financial assistance of Rs 50,000 per hectare for a 3-year period for organic inputs, certification, and marketing. It promotes the use of organic manure and bio-fertilizers.",
+            "incomeCriteria": "No specific income criteria. The focus is on promoting organic farming practices.",
+            "documentsRequired": "Aadhaar Card, bank account details, and land ownership documents. Farmers need to be part of a registered cluster.",
+            "link": "https://pgsindia-ncof.gov.in/pkvy/index.aspx"
+        }
+    ]
+}

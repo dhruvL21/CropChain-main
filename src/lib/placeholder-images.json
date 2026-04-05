@@ -1,0 +1,94 @@
+{
+  "placeholderImages": [
+    {
+      "id": "user-avatar-1",
+      "description": "Farmer user avatar",
+      "imageUrl": "https://images.unsplash.com/photo-1628600881785-20238ebee731?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxmYXJtZXIlMjBwb3J0cmFpdHxlbnwwfHx8fDE3Njk0MzM2NzB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "farmer portrait"
+    },
+    {
+      "id": "shop-seeds",
+      "description": "Packets of seeds",
+      "imageUrl": "https://images.unsplash.com/photo-1731970820339-e725b78f55e4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxzZWVkcyUyMHBhY2tldHxlbnwwfHx8fDE3Njk1MDYyNjN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "seeds packet"
+    },
+    {
+      "id": "shop-fertilizer",
+      "description": "Bag of fertilizer",
+      "imageUrl": "https://images.unsplash.com/photo-1759411364609-aeb30eb034e4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmZXJ0aWxpemVyJTIwYmFnfGVufDB8fHx8MTc2OTQ5NjIwNHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fertilizer bag"
+    },
+    {
+      "id": "shop-tractor",
+      "description": "A farm tractor",
+      "imageUrl": "https://images.unsplash.com/photo-1680033786474-58d0a84e2d5f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxmYXJtJTIwdHJhY3RvcnxlbnwwfHx8fDE3Njk0MTgzMTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "farm tractor"
+    },
+    {
+      "id": "shop-tools",
+      "description": "Various farming hand tools",
+      "imageUrl": "https://images.unsplash.com/photo-1649959738550-81aa768f8c88?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxnYXJkZW5pbmclMjB0b29sc3xlbnwwfHx8fDE3Njk0OTY0Mjl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "gardening tools"
+    },
+    {
+      "id": "market-wheat",
+      "description": "Harvested wheat grains",
+      "imageUrl": "https://images.unsplash.com/photo-1660925621911-60aaecb4ce1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8d2hlYXQlMjBncmFpbnxlbnwwfHx8fDE3Njk0OTkyMDd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wheat grain"
+    },
+    {
+      "id": "market-corn",
+      "description": "Fresh corn on the cob",
+      "imageUrl": "https://images.unsplash.com/photo-1708077810069-0e082d9558dd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxjb3JuJTIwY29ifGVufDB8fHx8fDE3Njk0ODk4Mzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "corn cob"
+    },
+    {
+      "id": "market-tomatoes",
+      "description": "A basket of fresh tomatoes",
+      "imageUrl": "https://images.unsplash.com/photo-1631292171396-26a654f51c48?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHx0b21hdG9lcyUyMGJhc2tldHxlbnwwfHx8fDE3Njk1MDYyNjN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "tomatoes basket"
+    },
+    {
+      "id": "market-carrots",
+      "description": "A bunch of carrots",
+      "imageUrl": "https://images.unsplash.com/photo-1761936648977-2d18d98367e8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxjYXJyb3RzJTIwYnVuY2h8ZW58MHx8fHwxNzY5NDkwMDQ0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "carrots bunch"
+    },
+    {
+      "id": "market-potatoes",
+      "description": "A crate of fresh potatoes",
+      "imageUrl": "https://picsum.photos/seed/potatoes/600/400",
+      "imageHint": "potatoes crate"
+    },
+    {
+      "id": "market-onions",
+      "description": "A bag of onions",
+      "imageUrl": "https://images.unsplash.com/photo-1694944477918-a23f25d8dd78?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxvbmlvbnMlMjBiYWd8ZW58MHx8fHwxNzY5NzAxNjQ3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "onions bag"
+    },
+    {
+      "id": "market-rice",
+      "description": "A bowl of uncooked rice",
+      "imageUrl": "https://images.unsplash.com/photo-1625540002162-00320b5c6b63?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cmljZSUyMGJvd2x8ZW58MHx8fHwxNzY5NzAxNjQ2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "rice bowl"
+    },
+    {
+      "id": "market-apples",
+      "description": "A basket of red apples",
+      "imageUrl": "https://images.unsplash.com/photo-1559981794-7dbbbf1411c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxhcHBsZXMlMjBiYXNrZXR8ZW58MHx8fHwxNzY5NjI0MDAyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "apples basket"
+    },
+    {
+      "id": "market-lettuce",
+      "description": "A head of fresh lettuce",
+      "imageUrl": "https://images.unsplash.com/photo-1625414501850-f01e1cda5121?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxsZXR0dWNlJTIwaGVhZHxlbnwwfHx8fDE3Njk3MDE2NDd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "lettuce head"
+    },
+    {
+      "id": "market-soybeans",
+      "description": "A bowl of soybeans",
+      "imageUrl": "https://images.unsplash.com/photo-1575262599410-837a72005862?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzb3liZWFucyUyMGJvd2x8ZW58MHx8fHwxNzY5Njg5OTg3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "soybeans bowl"
+    }
+  ]
+}
