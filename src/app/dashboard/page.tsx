@@ -183,7 +183,7 @@ import { sampleOrders } from '@/lib/placeholder-data';
 
     return (
       <div className="flex flex-col gap-8">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {isLoading ? (
             Array.from({length: 4}).map((_, i) => (
                 <Card key={i}>
@@ -218,77 +218,139 @@ import { sampleOrders } from '@/lib/placeholder-data';
           )}
         </div>
         
-        <Card>
-            <CardHeader>
-                <CardTitle>{t('dashboard.receivedOffers')}</CardTitle>
-                <CardDescription>{t('dashboard.receivedOffersDescription')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>{t('common.crop')}</TableHead>
-                            <TableHead>{t('dashboard.buyer')}</TableHead>
-                            <TableHead>{t('dashboard.offer')}</TableHead>
-                            <TableHead>{t('common.quantity')}</TableHead>
-                            <TableHead>{t('common.status')}</TableHead>
-                            <TableHead className="text-right">{t('dashboard.actions')}</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {isLoadingOffers ? (
-                            Array.from({ length: 3 }).map((_, i) => (
-                                <TableRow key={i}>
-                                    <TableCell><Skeleton className="h-5 w-3/4" /></TableCell>
-                                    <TableCell><Skeleton className="h-5 w-1/2" /></TableCell>
-                                    <TableCell><Skeleton className="h-5 w-1/2" /></TableCell>
-                                    <TableCell><Skeleton className="h-5 w-1/2" /></TableCell>
-                                    <TableCell><Skeleton className="h-5 w-1/2" /></TableCell>
-                                    <TableCell className="text-right"><Skeleton className="h-9 w-24 ml-auto" /></TableCell>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t('dashboard.receivedOffers')}</CardTitle>
+                        <CardDescription>{t('dashboard.receivedOffersDescription')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>{t('common.crop')}</TableHead>
+                                    <TableHead>{t('dashboard.buyer')}</TableHead>
+                                    <TableHead>{t('dashboard.offer')}</TableHead>
+                                    <TableHead>{t('common.quantity')}</TableHead>
+                                    <TableHead>{t('common.status')}</TableHead>
+                                    <TableHead className="text-right">{t('dashboard.actions')}</TableHead>
                                 </TableRow>
-                            ))
-                        ) : offers && offers.length > 0 ? (
-                            offers.map((offer) => {
-                                const cropDisplayName = getCropDisplayName(offer.cropName, t);
-                                let buyerDisplayName = offer.buyerName;
-                                if (!buyerDisplayName || buyerDisplayName.toLowerCase() === 'anonymous_buyer') {
-                                    buyerDisplayName = t('dashboard.anonymous_buyer');
-                                }
+                            </TableHeader>
+                            <TableBody>
+                                {isLoadingOffers ? (
+                                    Array.from({ length: 3 }).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell><Skeleton className="h-5 w-3/4" /></TableCell>
+                                            <TableCell><Skeleton className="h-5 w-1/2" /></TableCell>
+                                            <TableCell><Skeleton className="h-5 w-1/2" /></TableCell>
+                                            <TableCell><Skeleton className="h-5 w-1/2" /></TableCell>
+                                            <TableCell><Skeleton className="h-5 w-1/2" /></TableCell>
+                                            <TableCell className="text-right"><Skeleton className="h-9 w-24 ml-auto" /></TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : offers && offers.length > 0 ? (
+                                    offers.map((offer) => {
+                                        const cropDisplayName = getCropDisplayName(offer.cropName, t);
+                                        let buyerDisplayName = offer.buyerName;
+                                        if (!buyerDisplayName || buyerDisplayName.toLowerCase() === 'anonymous_buyer') {
+                                            buyerDisplayName = t('dashboard.anonymous_buyer');
+                                        }
 
-                                return (
-                                <TableRow key={offer.id}>
-                                    <TableCell className="font-medium">{cropDisplayName}</TableCell>
-                                    <TableCell>{buyerDisplayName}</TableCell>
-                                    <TableCell>₹{offer.offerPrice.toFixed(2)} / {offer.unit}</TableCell>
-                                    <TableCell>{offer.quantity} {offer.unit}</TableCell>
-                                    <TableCell>
-                                        <Badge variant={
-                                            offer.status === 'pending' ? 'secondary' : offer.status === 'accepted' ? 'default' : 'destructive'
-                                        }>
-                                            {t(`myOffers.status.${offer.status}`)}
+                                        return (
+                                        <TableRow key={offer.id}>
+                                            <TableCell className="font-medium">{cropDisplayName}</TableCell>
+                                            <TableCell>{buyerDisplayName}</TableCell>
+                                            <TableCell>₹{offer.offerPrice.toFixed(2)} / {offer.unit}</TableCell>
+                                            <TableCell>{offer.quantity} {offer.unit}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={
+                                                    offer.status === 'pending' ? 'secondary' : offer.status === 'accepted' ? 'default' : 'destructive'
+                                                }>
+                                                    {t(`myOffers.status.${offer.status}`)}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {offer.status === 'pending' && (
+                                                    <div className="flex gap-2 justify-end">
+                                                        <Button variant="outline" size="sm" onClick={() => handleOfferAction(offer, 'accepted')}>{t('dashboard.accept')}</Button>
+                                                        <Button variant="destructive" size="sm" onClick={() => handleOfferAction(offer, 'rejected')}>{t('dashboard.reject')}</Button>
+                                                    </div>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    )})
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="text-center text-muted-foreground">
+                                            {t('dashboard.noPendingOffers')}
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
+            <div className="space-y-4">
+                <Card>
+                    <CardHeader>
+                    <CardTitle>{t('dashboard.inventoryStatus')}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                        <TableHeader>
+                            <TableRow>
+                            <TableHead>{t('dashboard.item')}</TableHead>
+                            <TableHead>{t('common.status')}</TableHead>
+                            <TableHead className="text-right">{t('common.quantity')}</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {isLoading ? (
+                                Array.from({length: 3}).map((_, i) => (
+                                    <TableRow key={i}>
+                                        <TableCell><Skeleton className="h-5 w-3/4" /></TableCell>
+                                        <TableCell><Skeleton className="h-5 w-1/2" /></TableCell>
+                                        <TableCell className="text-right"><Skeleton className="h-5 w-1/4 ml-auto" /></TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                inventoryData.map((item) => (
+                                    <TableRow key={item.id}>
+                                        <TableCell className="font-medium">{t(`products.${item.id}.name`)}</TableCell>
+                                        <TableCell>
+                                        <Badge
+                                            variant={
+                                            item.status === 'inStock'
+                                                ? 'default'
+                                                : item.status === 'lowStock'
+                                                ? 'secondary'
+                                                : 'destructive'
+                                            }
+                                            className={item.status === 'lowStock' ? 'bg-accent text-accent-foreground' : ''}
+                                        >
+                                            {t(`common.${item.status}`)}
                                         </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        {offer.status === 'pending' && (
-                                            <div className="flex gap-2 justify-end">
-                                                <Button variant="outline" size="sm" onClick={() => handleOfferAction(offer, 'accepted')}>{t('dashboard.accept')}</Button>
-                                                <Button variant="destructive" size="sm" onClick={() => handleOfferAction(offer, 'rejected')}>{t('dashboard.reject')}</Button>
-                                            </div>
-                                        )}
+                                        </TableCell>
+                                        <TableCell className="text-right">{`${item.quantity} ${item.unit}`}</TableCell>
+                                    </TableRow>
+                                    ))
+                                )
+                            }
+                            {!isLoading && inventoryData.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={3} className="text-center text-muted-foreground">
+                                        {t('dashboard.noInventory')}
                                     </TableCell>
                                 </TableRow>
-                            )})
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={6} className="text-center text-muted-foreground">
-                                    {t('dashboard.noPendingOffers')}
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
+                            )}
+                        </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
             <Card>
@@ -357,78 +419,6 @@ import { sampleOrders } from '@/lib/placeholder-data';
             <PriceOptimizerForm />
         </div>
   
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('dashboard.inventoryStatus')}</CardTitle>
-            <CardDescription>{t('dashboard.inventoryStatusDescription')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('dashboard.item')}</TableHead>
-                  <TableHead>{t('common.status')}</TableHead>
-                  <TableHead className="text-right">{t('common.quantity')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                    Array.from({length: 5}).map((_, i) => (
-                        <TableRow key={i}>
-                            <TableCell><Skeleton className="h-5 w-3/4" /></TableCell>
-                            <TableCell><Skeleton className="h-5 w-1/2" /></TableCell>
-                            <TableCell className="text-right"><Skeleton className="h-5 w-1/4 ml-auto" /></TableCell>
-                        </TableRow>
-                    ))
-                ) : (
-                    inventoryData.map((item) => (
-                        <TableRow key={item.id}>
-                            <TableCell className="font-medium">{t(`products.${item.id}.name`)}</TableCell>
-                            <TableCell>
-                            <Badge
-                                variant={
-                                item.status === 'inStock'
-                                    ? 'default'
-                                    : item.status === 'lowStock'
-                                    ? 'secondary'
-                                    : 'destructive'
-                                }
-                                className={item.status === 'lowStock' ? 'bg-accent text-accent-foreground' : ''}
-                            >
-                                {t(`common.${item.status}`)}
-                            </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">{`${item.quantity} ${item.unit}`}</TableCell>
-                        </TableRow>
-                        ))
-                    )
-                }
-                 {!isLoading && inventoryData.length === 0 && (
-                    <TableRow>
-                        <TableCell colSpan={3} className="text-center text-muted-foreground">
-                            {t('dashboard.noInventory')}
-                        </TableCell>
-                    </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
       </div>
     );
   }
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-    

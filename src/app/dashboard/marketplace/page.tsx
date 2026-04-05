@@ -112,7 +112,7 @@ const PurchaseDialog = ({ crop, isWholesale, onOpenChange, open }: { crop: any, 
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>{isWholesale ? t('marketplace.makeOffer') : t('marketplace.addToCart')}</DialogTitle>
                     <DialogDescription>
@@ -136,6 +136,7 @@ const PurchaseDialog = ({ crop, isWholesale, onOpenChange, open }: { crop: any, 
                             onChange={(e) => setQuantity(Math.min(maxQuantity, Math.max(1, Number(e.target.value))))}
                             max={maxQuantity}
                             min={1}
+                            className="h-10 text-base"
                         />
                     </div>
                     {isWholesale && (
@@ -150,6 +151,7 @@ const PurchaseDialog = ({ crop, isWholesale, onOpenChange, open }: { crop: any, 
                                 onChange={(e) => setOfferPrice(Number(e.target.value))}
                                 step="0.01"
                                 min="0"
+                                className="h-10 text-base"
                             />
                         </div>
                     )}
@@ -160,11 +162,11 @@ const PurchaseDialog = ({ crop, isWholesale, onOpenChange, open }: { crop: any, 
                         <p className="text-lg">{t('common.total', { total: total.toFixed(2) })}</p>
                     </div>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="gap-2 sm:gap-0">
                     <DialogClose asChild>
-                        <Button variant="outline">{t('common.cancel')}</Button>
+                        <Button variant="outline" size="lg">{t('common.cancel')}</Button>
                     </DialogClose>
-                    <Button onClick={handleAction}>{isWholesale ? t('marketplace.submitOffer') : t('marketplace.addToCart')}</Button>
+                    <Button onClick={handleAction} size="lg">{isWholesale ? t('marketplace.submitOffer') : t('marketplace.addToCart')}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -206,7 +208,7 @@ const CropCard = ({ crop, isWholesale }: { crop: any, isWholesale: boolean }) =>
 
     return (
         <>
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden flex flex-col h-full">
                 {imageUrl && (
                     <div className="relative aspect-video w-full">
                         <Image
@@ -218,26 +220,26 @@ const CropCard = ({ crop, isWholesale }: { crop: any, isWholesale: boolean }) =>
                         />
                     </div>
                 )}
-                <CardContent className="p-4">
+                <CardContent className="p-4 flex-grow">
                     <div className="flex justify-between items-start">
                         <h3 className="text-lg font-semibold">{cropDisplayName}</h3>
                         <Badge variant="secondary">{crop.qualityGrade}</Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">{crop.certifications}</p>
-                    <div className="mt-4">
+                    <p className="text-sm text-muted-foreground mb-4">{crop.certifications}</p>
+                    <div>
                         <p className="text-2xl font-bold">₹{price.toFixed(2)} <span className="text-sm font-normal text-muted-foreground">/ {crop.unit}</span></p>
                         <p className="text-sm text-muted-foreground">{t('common.available', { quantity, unit: crop.unit })}</p>
                     </div>
                 </CardContent>
-                <CardFooter className={cn("grid gap-2 p-4 pt-0", isWholesale ? 'grid-cols-1' : 'grid-cols-2')}>
-                    <Button onClick={() => setIsDialogOpen(true)} disabled={isOutOfStock}>
+                <CardFooter className={cn("grid gap-2 p-4 pt-0 mt-auto", isWholesale ? 'grid-cols-1' : 'grid-cols-2')}>
+                    <Button onClick={() => setIsDialogOpen(true)} disabled={isOutOfStock} size="lg">
                         {isOutOfStock ? t('common.outOfStock') : (isWholesale ? t('marketplace.makeOffer') : t('marketplace.addToCart'))}
                     </Button>
                     {!isWholesale &&
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button onClick={handleSampleAction} disabled={!isSampleAvailable}>
+                                    <Button onClick={handleSampleAction} disabled={!isSampleAvailable} size="lg">
                                         {t('marketplace.sample')}
                                     </Button>
                                 </TooltipTrigger>
@@ -281,8 +283,8 @@ const MarketplaceGrid = ({ isWholesale }: { isWholesale: boolean }) => {
                            <Skeleton className="h-4 w-1/4" />
                         </CardContent>
                         <CardFooter className={cn("grid gap-2 p-4 pt-0", isWholesale ? 'grid-cols-1' : 'grid-cols-2')}>
-                            <Skeleton className="h-10 w-full" />
-                            {!isWholesale && <Skeleton className="h-10 w-full" />}
+                            <Skeleton className="h-12 w-full" />
+                            {!isWholesale && <Skeleton className="h-12 w-full" />}
                         </CardFooter>
                     </Card>
                 ))}
@@ -311,25 +313,23 @@ export default function MarketplacePage() {
   const [activeTab, setActiveTab] = useState('retail');
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
   const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const retailTabRef = useRef<HTMLButtonElement>(null);
-  const wholesaleTabRef = useRef<HTMLButtonElement>(null);
   const { t } = useLanguage();
 
   useLayoutEffect(() => {
     const setIndicator = () => {
-      const activeTabRef = activeTab === 'retail' ? retailTabRef : wholesaleTabRef;
-      const tabsContainerNode = tabsContainerRef.current;
-      
-      if (activeTabRef.current && tabsContainerNode) {
-        const containerRect = tabsContainerNode.getBoundingClientRect();
-        const tabRect = activeTabRef.current.getBoundingClientRect();
+        const activeTabNode = tabsContainerRef.current?.querySelector(`[data-state="active"]`);
+        const tabsContainerNode = tabsContainerRef.current;
 
-        setIndicatorStyle({
-          left: tabRect.left - containerRect.left,
-          width: tabRect.width,
-          opacity: 1,
-        });
-      }
+        if (activeTabNode && tabsContainerNode) {
+            const containerRect = tabsContainerNode.getBoundingClientRect();
+            const tabRect = activeTabNode.getBoundingClientRect();
+
+            setIndicatorStyle({
+                left: tabRect.left - containerRect.left,
+                width: tabRect.width,
+                opacity: 1,
+            });
+        }
     };
 
     setIndicator();
@@ -342,27 +342,21 @@ export default function MarketplacePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="retail">
-        <TabsList ref={tabsContainerRef} className="relative grid w-full max-w-[400px] grid-cols-2 mx-auto">
-          <div
-            className="absolute top-1 bottom-1 rounded-sm bg-background/70 backdrop-blur-sm shadow-sm transition-all duration-500 ease-in-out"
-            style={indicatorStyle}
-          />
-          <TabsTrigger
-            ref={retailTabRef}
-            value="retail"
-            className="relative z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-          >
-            {t('common.retail')}
-          </TabsTrigger>
-          <TabsTrigger
-            ref={wholesaleTabRef}
-            value="wholesale"
-            className="relative z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-          >
-            {t('common.wholesale')}
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="retail" className="w-full">
+        <div className="flex justify-center">
+            <TabsList ref={tabsContainerRef} className="relative grid w-full max-w-md grid-cols-2">
+                <div
+                    className="absolute inset-1 rounded-sm bg-background/80 backdrop-blur-sm shadow-sm transition-all duration-300 ease-in-out"
+                    style={indicatorStyle}
+                />
+                <TabsTrigger value="retail" className="relative z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+                    {t('common.retail')}
+                </TabsTrigger>
+                <TabsTrigger value="wholesale" className="relative z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+                    {t('common.wholesale')}
+                </TabsTrigger>
+            </TabsList>
+        </div>
         <TabsContent value="retail">
           <MarketplaceGrid isWholesale={false} />
         </TabsContent>

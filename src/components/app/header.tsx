@@ -93,7 +93,7 @@ export function Header({ userProfile }: { userProfile?: UserProfile | null }) {
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between bg-background/80 px-4 backdrop-blur-sm md:px-6">
       
-      {/* Left Group: Logo */}
+      {/* Left Group: Logo and Desktop Nav */}
       <div className="flex items-center gap-4">
         <Link
           href="/dashboard"
@@ -101,10 +101,8 @@ export function Header({ userProfile }: { userProfile?: UserProfile | null }) {
         >
           <Logo />
         </Link>
-      </div>
-
-      {/* Center: Desktop Nav */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        
+        {/* Desktop Nav */}
         <nav className={cn("hidden items-center text-base font-medium md:flex", language === 'en' ? 'gap-1' : 'gap-4')}>
           {mainLinks.map((link) => (
             <Link
@@ -122,7 +120,6 @@ export function Header({ userProfile }: { userProfile?: UserProfile | null }) {
           ))}
         </nav>
       </div>
-
 
       {/* Right side: Icons and mobile menu */}
       <div className="flex items-center gap-2 md:gap-4">
@@ -151,15 +148,6 @@ export function Header({ userProfile }: { userProfile?: UserProfile | null }) {
                 <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
             </SheetHeader>
             <nav className="grid gap-6 text-lg font-medium">
-              <SheetClose asChild>
-                  <Link
-                      href="/dashboard"
-                      className="flex items-center gap-2 text-lg font-semibold"
-                  >
-                      <Logo />
-                      <span className="sr-only">CropChain</span>
-                  </Link>
-              </SheetClose>
               {mainLinks.map((link) => (
                    <SheetClose asChild key={link.href}>
                       <Link href={link.href} className="text-muted-foreground hover:text-foreground">{t(link.labelKey)}</Link>
@@ -167,7 +155,7 @@ export function Header({ userProfile }: { userProfile?: UserProfile | null }) {
               ))}
             </nav>
             <div className="mt-auto border-t pt-4">
-              <div className="flex items-center justify-center gap-4">
+              <div className="flex items-center justify-around">
                   <OfflineIndicator />
                   <LanguageSwitcher />
                   {userProfile && <NotificationBell />}

@@ -22,6 +22,7 @@ import { useFirestore, useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { collection, serverTimestamp, writeBatch, doc } from 'firebase/firestore';
 import { CheckoutPaymentDialog } from './checkout-payment-dialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function CartSheet() {
   const { cartItems, removeItem, cartCount, clearCart } = useCart();
@@ -29,6 +30,7 @@ export function CartSheet() {
   const { user: buyer } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const totalCartAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
@@ -219,11 +221,17 @@ export function CartSheet() {
             </ScrollArea>
             <Separator />
             <SheetFooter className="p-6">
+              {isMobile ? (
+                <Button onClick={handleCheckout} disabled={cartCount === 0} className="w-full">
+                  {t('cart.checkout')}
+                </Button>
+              ) : (
                 <CheckoutPaymentDialog 
-                    totalAmount={totalCartAmount} 
-                    onConfirmPayment={handleCheckout} 
-                    disabled={cartCount === 0} 
+                  totalAmount={totalCartAmount} 
+                  onConfirmPayment={handleCheckout} 
+                  disabled={cartCount === 0} 
                 />
+              )}
             </SheetFooter>
           </>
         ) : (
