@@ -5,9 +5,11 @@ import { useUser, useFirestore, useDoc, useCollection } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
 import { useLanguage } from "@/hooks/use-language";
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User as UserIcon, Building, Tractor, List, CheckCircle, Clock, Handshake } from 'lucide-react';
+import { User as UserIcon, Building, Tractor, List, CheckCircle, Clock, Handshake, Wallet } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -21,6 +23,7 @@ interface UserProfile {
   farmAddress?: string;
   companyName?: string;
   businessType?: string;
+  balance?: number;
 }
 
 
@@ -46,6 +49,7 @@ export default function ProfilePage() {
     const { t } = useLanguage();
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
+    const { toast } = useToast();
 
     const userProfileRef = useMemo(() => {
         if (user?.uid && firestore) {
@@ -177,16 +181,35 @@ export default function ProfilePage() {
                     </Card>
                     
                     {stats && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>{t('profile.activityStats')}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <StatRow icon={stats.stat1.icon} label={stats.stat1.label} value={stats.stat1.value} />
-                                <StatRow icon={stats.stat2.icon} label={stats.stat2.label} value={stats.stat2.value} />
-                                <StatRow icon={stats.stat3.icon} label={stats.stat3.label} value={stats.stat3.value} />
-                            </CardContent>
-                        </Card>
+                        <div className="grid gap-8">
+                            <Card className="bg-primary/5 border-primary/20">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                        <Wallet className="h-4 w-4" />
+                                        {t('profile.walletBalance')}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-3xl font-bold">₹{userProfile?.balance?.toFixed(2) || '0.00'}</div>
+                                    {userProfile?.role === 'farmer' && (
+                                        <Button className="w-full mt-4" variant="outline" onClick={() => toast({ title: t('profile.withdrawSuccess') })}>
+                                            {t('profile.withdrawFunds')}
+                                        </Button>
+                                    )}
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>{t('profile.activityStats')}</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <StatRow icon={stats.stat1.icon} label={stats.stat1.label} value={stats.stat1.value} />
+                                    <StatRow icon={stats.stat2.icon} label={stats.stat2.label} value={stats.stat2.value} />
+                                    <StatRow icon={stats.stat3.icon} label={stats.stat3.label} value={stats.stat3.value} />
+                                </CardContent>
+                            </Card>
+                        </div>
                     )}
                 </div>
 

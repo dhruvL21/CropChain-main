@@ -1,16 +1,15 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useUser, useFirestore, useCollection } from '@/firebase';
-import { collection, query, where, orderBy, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { useUser, useFirestore, useCollection, useDoc } from '@/firebase';
+import { collection, query, where, doc, updateDoc, serverTimestamp, increment, runTransaction } from 'firebase/firestore';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EscrowTimeline, OrderStatus, PaymentStatus } from '@/components/app/escrow-timeline';
 import { HandCoins, Landmark, Package, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface EscrowPayment {
-  id: string;
   amount: number;
   buyerId: string;
   farmerId: string;
@@ -21,77 +20,105 @@ interface EscrowPayment {
   createdAt: any;
 }
 
+interface UserProfile {
+  role: 'farmer' | 'buyer';
+}
+
+const formatCurrency = (value: number) => `\u20B9${value.toFixed(2)}`;
+
+const getCreatedAtMillis = (createdAt: any) => {
+  if (!createdAt) return 0;
+  if (typeof createdAt.toMillis === 'function') return createdAt.toMillis();
+  if (typeof createdAt.seconds === 'number') return createdAt.seconds * 1000;
+
+  const parsed = new Date(createdAt).getTime();
+  return Number.isNaN(parsed) ? 0 : parsed;
+};
+
 export default function TransactionsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  const isFarmer = user?.displayName !== 'Buyer'; // Assuming role logic via context/profile
+  const userProfileRef = useMemo(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
 
-  // Dynamic query based on user ID
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+  const currentRole = userProfile?.role ?? 'buyer';
+
   const paymentsQuery = useMemo(() => {
     if (!firestore || !user) return null;
-    
-    // In a real app we'd fetch profile role to distinguish, but fallback:
-    // query by buyerId OR farmerId. For simplicity in NoSQL we try fetching both or combine client side.
-    // However, Firestore doesn't support logical OR across different fields in a single query easily without composite indexes.
-    // We'll query using farmerId if farmer, otherwise buyerId. We'll determine role implicitly:
-    // if farmer fields exist, or we can just fetch where farmerId == user.uid. If empty, fetch where buyerId == user.uid.
-    // Let's do two queries, or just assume the user uses the generic query hook correctly.
-    // For this mockup, we'll try buyer query. If empty, assume they might be farmer. 
-    // Usually, you know the role. Let's just query where `farmerId == uid`, and if empty, try `buyerId == uid`.
-    // Better: use two separate hooks.
-    return query(collection(firestore, 'escrowPayments'), where('buyerId', '==', user.uid), orderBy('createdAt', 'desc'));
-  }, [firestore, user]);
 
-  const paymentsQueryFarmer = useMemo(() => {
-    if (!firestore || !user) return null;
-    return query(collection(firestore, 'escrowPayments'), where('farmerId', '==', user.uid), orderBy('createdAt', 'desc'));
-  }, [firestore, user]);
+    const roleField = currentRole === 'farmer' ? 'farmerId' : 'buyerId';
+    return query(collection(firestore, 'escrowPayments'), where(roleField, '==', user.uid));
+  }, [currentRole, firestore, user]);
 
-  const { data: buyerPayments } = useCollection<EscrowPayment>(paymentsQuery);
-  const { data: farmerPayments } = useCollection<EscrowPayment>(paymentsQueryFarmer);
+  const { data: paymentsData } = useCollection<EscrowPayment>(paymentsQuery);
 
-  const payments = (buyerPayments?.length ? buyerPayments : farmerPayments) || [];
-  const currentRole = buyerPayments?.length ? 'buyer' : 'farmer';
+  const payments = useMemo(
+    () => [...(paymentsData ?? [])].sort((a, b) => getCreatedAtMillis(b.createdAt) - getCreatedAtMillis(a.createdAt)),
+    [paymentsData]
+  );
 
-  // Stats calculation
-  const totalHeld = payments.filter(p => p.status === 'held').reduce((acc, p) => acc + p.amount, 0);
-  const totalReleased = payments.filter(p => p.status === 'released').reduce((acc, p) => acc + p.amount, 0);
-  const pendingDeliveries = payments.filter(p => p.orderStatus !== 'Delivered').length;
+  const totalHeld = payments.filter((payment) => payment.status === 'held').reduce((sum, payment) => sum + payment.amount, 0);
+  const totalReleased = payments.filter((payment) => payment.status === 'released').reduce((sum, payment) => sum + payment.amount, 0);
+  const pendingDeliveries = payments.filter((payment) => payment.orderStatus !== 'Delivered').length;
 
   const updateOrderStatus = async (paymentId: string, orderId: string, newStatus: OrderStatus) => {
     if (!firestore || !user) return;
+
     try {
-      // Note: In real app, we must also update the actual 'orders' document.
-      // We perform updates to the shared escrow record here for the UI mock.
       const paymentRef = doc(firestore, 'escrowPayments', paymentId);
       await updateDoc(paymentRef, { orderStatus: newStatus, updatedAt: serverTimestamp() });
+
+      const payment = payments.find((item) => item.id === paymentId);
+      if (payment?.farmerId) {
+        const orderRef = doc(firestore, 'users', payment.farmerId, 'orders', orderId);
+        await updateDoc(orderRef, { status: newStatus, updatedAt: serverTimestamp() });
+      }
+
       toast({ title: 'Status Updated', description: `Order is now ${newStatus}.` });
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       toast({ title: 'Update Failed', variant: 'destructive' });
     }
   };
 
   const releaseFunds = async (paymentId: string) => {
     if (!firestore || !user) return;
+
+    const payment = payments.find((item) => item.id === paymentId);
+    if (!payment) return;
+
     try {
-      const paymentRef = doc(firestore, 'escrowPayments', paymentId);
-      await updateDoc(paymentRef, { status: 'released', updatedAt: serverTimestamp() });
+      await runTransaction(firestore, async (transaction) => {
+        const paymentRef = doc(firestore, 'escrowPayments', paymentId);
+        const farmerProfileRef = doc(firestore, 'users', payment.farmerId);
+        const orderRef = doc(firestore, 'users', payment.farmerId, 'orders', payment.orderId);
+
+        transaction.update(paymentRef, { status: 'released', updatedAt: serverTimestamp() });
+        transaction.update(orderRef, { status: 'Delivered', updatedAt: serverTimestamp() });
+        transaction.update(farmerProfileRef, {
+          balance: increment(payment.amount),
+          updatedAt: serverTimestamp(),
+        });
+      });
+
       toast({ title: 'Funds Released', description: 'The farmer will receive the payment shortly.' });
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       toast({ title: 'Release Failed', variant: 'destructive' });
     }
   };
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="mx-auto max-w-5xl space-y-8">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Transactions & Escrow</h2>
-          <p className="text-muted-foreground mt-2 flex items-center gap-2">
+          <p className="mt-2 flex items-center gap-2 text-muted-foreground">
             <ShieldCheck className="h-4 w-4 text-green-500" />
             All payments are securely held in escrow until delivery is confirmed.
           </p>
@@ -105,7 +132,7 @@ export default function TransactionsPage() {
             <Landmark className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">₹{totalHeld.toFixed(2)}</div>
+            <div className="text-3xl font-bold">{formatCurrency(totalHeld)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -114,7 +141,7 @@ export default function TransactionsPage() {
             <HandCoins className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-primary">₹{totalReleased.toFixed(2)}</div>
+            <div className="text-3xl font-bold text-primary">{formatCurrency(totalReleased)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -129,52 +156,48 @@ export default function TransactionsPage() {
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-xl font-semibold mt-8 mb-4">Recent Escrow Activity</h3>
-        
+        <h3 className="mb-4 mt-8 text-xl font-semibold">Recent Escrow Activity</h3>
+
         {payments.length === 0 ? (
-          <div className="text-center py-12 bg-muted/20 rounded-xl border border-dashed">
+          <div className="rounded-xl border border-dashed bg-muted/20 py-12 text-center">
             <p className="text-muted-foreground">No transactions found.</p>
           </div>
         ) : (
           payments.map((payment) => (
             <Card key={payment.id} className="overflow-hidden">
-              <div className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-muted/10 border-b">
+              <div className="flex flex-col justify-between border-b bg-muted/10 p-6 md:flex-row md:items-center">
                 <div>
-                  <h4 className="font-semibold text-lg">{payment.itemsSummary}</h4>
-                  <p className="text-sm text-muted-foreground font-mono mt-1">Ref: {payment.id}</p>
+                  <h4 className="text-lg font-semibold">{payment.itemsSummary}</h4>
+                  <p className="mt-1 font-mono text-sm text-muted-foreground">Ref: {payment.id}</p>
                 </div>
-                <div className="mt-4 md:mt-0 text-right">
-                  <div className="text-2xl font-bold">₹{payment.amount.toFixed(2)}</div>
-                  <div className="text-sm border rounded-full px-3 py-1 inline-block mt-2 bg-background shadow-sm">
+                <div className="mt-4 text-right md:mt-0">
+                  <div className="text-2xl font-bold">{formatCurrency(payment.amount)}</div>
+                  <div className="mt-2 inline-block rounded-full border bg-background px-3 py-1 text-sm shadow-sm">
                     {payment.status === 'held' ? (
-                      <span className="text-amber-500 font-medium">Funds Held securely</span>
+                      <span className="font-medium text-amber-500">Funds Held securely</span>
                     ) : (
-                      <span className="text-green-500 font-medium">Funds Released</span>
+                      <span className="font-medium text-green-500">Funds Released</span>
                     )}
                   </div>
                 </div>
               </div>
-              
-              <CardContent className="pt-6 pb-2">
+
+              <CardContent className="pb-2 pt-6">
                 <EscrowTimeline orderStatus={payment.orderStatus} paymentStatus={payment.status} />
               </CardContent>
 
-              <CardFooter className="bg-muted/10 pt-4 flex justify-end gap-3 border-t">
+              <CardFooter className="flex justify-end gap-3 border-t bg-muted/10 pt-4">
                 {currentRole === 'farmer' && payment.orderStatus === 'Processing' && (
-                  <Button onClick={() => updateOrderStatus(payment.id, payment.orderId, 'In Transit')}>
-                    Mark as In Transit
-                  </Button>
+                  <Button onClick={() => updateOrderStatus(payment.id, payment.orderId, 'In Transit')}>Mark as In Transit</Button>
                 )}
-                
+
                 {currentRole === 'farmer' && payment.orderStatus === 'In Transit' && (
-                  <Button onClick={() => updateOrderStatus(payment.id, payment.orderId, 'Delivered')}>
-                    Mark as Delivered
-                  </Button>
+                  <Button onClick={() => updateOrderStatus(payment.id, payment.orderId, 'Delivered')}>Mark as Delivered</Button>
                 )}
 
                 {currentRole === 'buyer' && payment.orderStatus === 'Delivered' && payment.status === 'held' && (
                   <Button onClick={() => releaseFunds(payment.id)} className="bg-green-600 hover:bg-green-700">
-                    Confirm Receipt & Release Funds <ArrowRight className="ml-2 w-4 h-4" />
+                    Confirm Receipt & Release Funds <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 )}
 

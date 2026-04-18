@@ -10,6 +10,7 @@ import {
   List,
   Handshake,
   Landmark,
+  Wallet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,6 +35,7 @@ interface UserProfile {
     firstName: string;
     lastName: string;
     role: 'farmer' | 'buyer';
+    balance?: number;
 }
 
 const allLinks = [
@@ -127,6 +129,12 @@ export function Header({ userProfile }: { userProfile?: UserProfile | null }) {
       {/* Right side: Icons and mobile menu */}
       <div className="flex items-center gap-2 md:gap-4">
         <div className="hidden items-center gap-2 md:flex md:gap-4">
+          {userProfile && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20 shadow-sm transition-all hover:shadow-md hover:bg-primary/15">
+                  <Wallet className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-bold text-primary">₹{userProfile.balance?.toFixed(0) || '0'}</span>
+              </div>
+          )}
           <OfflineIndicator />
           <LanguageSwitcher />
           {userProfile && <NotificationBell />}

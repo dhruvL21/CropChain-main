@@ -46,7 +46,10 @@
     "totalListings": "Total Listings",
     "offersMade": "Offers Made",
     "acceptedOffers": "Accepted Offers",
-    "pendingOffers": "Pending Offers"
+    "pendingOffers": "Pending Offers",
+    "walletBalance": "Wallet Balance",
+    "withdrawFunds": "Withdraw Funds",
+    "withdrawSuccess": "Withdrawal request submitted successfully!"
   },
   "settings": {
     "title": "Settings",
