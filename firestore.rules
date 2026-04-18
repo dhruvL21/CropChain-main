@@ -243,8 +243,8 @@ service cloud.firestore {
      * @path /escrowPayments/{paymentId}
      */
     match /escrowPayments/{paymentId} {
+      allow list: if isSignedIn() && (request.query.get('buyerId') == request.auth.uid || request.query.get('farmerId') == request.auth.uid);
       allow read: if isSignedIn() && (resource.data.buyerId == request.auth.uid || resource.data.farmerId == request.auth.uid);
-      allow list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.buyerId == request.auth.uid;
       allow update: if isSignedIn() && (resource.data.buyerId == request.auth.uid || resource.data.farmerId == request.auth.uid);
       allow delete: if false;
