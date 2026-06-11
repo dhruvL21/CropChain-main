@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useUser, useFirestore, useDoc } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Header } from '@/components/app/header';
+import { Footer } from '@/components/app/footer';
 import { CartProvider } from '@/hooks/use-cart';
 import { useLanguage } from '@/hooks/use-language';
 
@@ -73,6 +74,7 @@ export default function DashboardLayout({
       <div className="flex min-h-screen w-full flex-col">
         <Header userProfile={userProfile} />
         <main className="flex-1 bg-transparent p-4 sm:p-6 md:p-8">{children}</main>
+        <Footer />
       </div>
     </CartProvider>
   );
