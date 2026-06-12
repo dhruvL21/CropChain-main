@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { collection, serverTimestamp, writeBatch, doc } from 'firebase/firestore';
 import { CheckoutPaymentDialog } from './checkout-payment-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { buildTransactionRecord, createTransactionId, upsertLocalTransactions } from '@/lib/transactions';
 
 export function CartSheet() {
   const { cartItems, removeItem, cartCount, clearCart } = useCart();
@@ -128,7 +129,59 @@ export function CartSheet() {
                 });
 
                 await batch.commit();
+
+                const now = new Date().toISOString();
+                upsertLocalTransactions(items.map((item) => {
+                  const amount = item.price * item.quantity;
+                  return buildTransactionRecord({
+                    id: createTransactionId('CHK'),
+                    type: 'retail_order',
+                    cropName: item.name,
+                    quantity: item.quantity,
+                    unit: item.unit || 'unit',
+                    unitPrice: item.price,
+                    totalAmount: amount,
+                    farmerId,
+                    farmerName: 'Farmer',
+                    buyerId: buyer.uid,
+                    buyerName: buyer.displayName || 'Anonymous Buyer',
+                    status: amount > 0 ? 'in_escrow' : 'pending',
+                    verificationStatus: 'partially_verified',
+                    paymentMode: amount > 0 ? 'Escrow simulation' : 'Sample request',
+                    referenceNumber: orderRef.id,
+                    orderId: orderRef.id,
+                    source: 'checkout',
+                    createdAt: now,
+                    updatedAt: now,
+                  });
+                }));
             }
+        }
+
+        if (shopItems.length > 0) {
+            const now = new Date().toISOString();
+            upsertLocalTransactions(shopItems.map((item) => {
+              const amount = item.price * item.quantity;
+              return buildTransactionRecord({
+                id: createTransactionId('SHOP'),
+                type: 'shop_purchase',
+                cropName: getTranslatedItemName(item),
+                quantity: item.quantity,
+                unit: item.unit || 'unit',
+                unitPrice: item.price,
+                totalAmount: amount,
+                buyerId: buyer.uid,
+                buyerName: buyer.displayName || 'Current user',
+                farmerName: 'CropChain Shop',
+                status: 'paid',
+                verificationStatus: 'verified',
+                paymentMode: 'Wallet / checkout simulation',
+                referenceNumber: createTransactionId('SHOPREF'),
+                source: 'checkout',
+                createdAt: now,
+                updatedAt: now,
+              });
+            }));
         }
         
         // Determine which toast to show

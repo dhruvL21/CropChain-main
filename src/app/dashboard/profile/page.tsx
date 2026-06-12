@@ -1,15 +1,27 @@
 'use client';
 
-import { useMemo } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 import { useUser, useFirestore, useDoc, useCollection } from '@/firebase';
-import { doc, collection, query, where } from 'firebase/firestore';
+import { doc, collection, query, where, updateDoc, increment } from 'firebase/firestore';
 import { useLanguage } from "@/hooks/use-language";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User as UserIcon, Building, Tractor, List, CheckCircle, Clock, Handshake, Wallet } from 'lucide-react';
+import { User as UserIcon, Building, Tractor, List, CheckCircle, Clock, Handshake, Wallet, Plus } from 'lucide-react';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { buildTransactionRecord, createTransactionId, upsertLocalTransactions } from '@/lib/transactions';
 
 interface UserProfile {
   id: string;
@@ -50,6 +62,10 @@ export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
+    const [isAddMoneyOpen, setIsAddMoneyOpen] = useState(false);
+    const [topUpAmount, setTopUpAmount] = useState('');
+    const [topUpReference, setTopUpReference] = useState('');
+    const [isAddingMoney, setIsAddingMoney] = useState(false);
 
     const userProfileRef = useMemo(() => {
         if (user?.uid && firestore) {
@@ -105,6 +121,68 @@ export default function ProfilePage() {
         }
         return null;
     }, [userProfile, farmerListings, farmerOffers, buyerOffers, t]);
+
+    const handleAddMoney = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const amount = Number(topUpAmount);
+
+        if (!user || !userProfileRef || amount <= 0) {
+            toast({
+                title: t('common.error'),
+                description: 'Enter a valid amount to add.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        setIsAddingMoney(true);
+        try {
+            await updateDoc(userProfileRef, {
+                balance: increment(amount),
+            });
+
+            const now = new Date().toISOString();
+            const referenceNumber = topUpReference.trim() || createTransactionId('WALLETREF');
+            upsertLocalTransactions([
+                buildTransactionRecord({
+                    id: createTransactionId('WALLET'),
+                    type: 'wallet_top_up',
+                    cropName: 'Wallet top-up',
+                    quantity: 1,
+                    unit: 'top-up',
+                    unitPrice: amount,
+                    totalAmount: amount,
+                    farmerName: 'Wallet',
+                    buyerId: user.uid,
+                    buyerName: displayName || user.email || 'Current user',
+                    status: 'paid',
+                    verificationStatus: 'verified',
+                    paymentMode: 'Manual top-up simulation',
+                    referenceNumber,
+                    source: 'wallet',
+                    createdAt: now,
+                    updatedAt: now,
+                }),
+            ]);
+
+            setTopUpAmount('');
+            setTopUpReference('');
+            setIsAddMoneyOpen(false);
+            toast({
+                title: 'Money added',
+                description: `INR ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} was added to your wallet.`,
+            });
+        } catch (error) {
+            console.error('Failed to add money', error);
+            toast({
+                title: t('common.uhOh'),
+                description: 'Could not update your wallet balance. Please try again.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsAddingMoney(false);
+        }
+    };
 
 
     if (isLoading) {
@@ -191,6 +269,50 @@ export default function ProfilePage() {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="text-3xl font-bold">₹{userProfile?.balance?.toFixed(2) || '0.00'}</div>
+                                    <Dialog open={isAddMoneyOpen} onOpenChange={setIsAddMoneyOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button className="w-full mt-4">
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Add Money
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-md">
+                                            <DialogHeader>
+                                                <DialogTitle>Add Money to Wallet</DialogTitle>
+                                                <DialogDescription>
+                                                    This is a free simulated top-up for testing. No payment gateway or API key is required.
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <form onSubmit={handleAddMoney} className="grid gap-4">
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="walletAmount">Amount</Label>
+                                                    <Input
+                                                        id="walletAmount"
+                                                        type="number"
+                                                        min="1"
+                                                        step="0.01"
+                                                        value={topUpAmount}
+                                                        onChange={(event) => setTopUpAmount(event.target.value)}
+                                                        placeholder="1000"
+                                                    />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="walletReference">Reference</Label>
+                                                    <Input
+                                                        id="walletReference"
+                                                        value={topUpReference}
+                                                        onChange={(event) => setTopUpReference(event.target.value)}
+                                                        placeholder="Cash receipt, UPI ref, or note"
+                                                    />
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button type="submit" disabled={isAddingMoney}>
+                                                        {isAddingMoney ? 'Adding...' : 'Confirm Top-Up'}
+                                                    </Button>
+                                                </DialogFooter>
+                                            </form>
+                                        </DialogContent>
+                                    </Dialog>
                                     {userProfile?.role === 'farmer' && (
                                         <Button className="w-full mt-4" variant="outline" onClick={() => toast({ title: t('profile.withdrawSuccess') })}>
                                             {t('profile.withdrawFunds')}
