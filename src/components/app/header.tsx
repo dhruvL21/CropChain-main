@@ -12,6 +12,7 @@ import {
   Landmark,
   Wallet,
   ReceiptText,
+  Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -128,9 +129,18 @@ export function Header({ userProfile }: { userProfile?: UserProfile | null }) {
       <div className="flex items-center gap-2 md:gap-4">
         <div className="hidden items-center gap-2 md:flex md:gap-4">
           {userProfile && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20 shadow-sm transition-all hover:shadow-md hover:bg-primary/15">
-                  <Wallet className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-bold text-primary">₹{userProfile.balance?.toFixed(0) || '0'}</span>
+              <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20 shadow-sm transition-all hover:shadow-md hover:bg-primary/15">
+                      <Wallet className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-bold text-primary">₹{userProfile.balance?.toFixed(0) || '0'}</span>
+                  </div>
+                  <Link
+                      href="/dashboard/transactions"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 shadow-sm transition-all hover:scale-105"
+                      title="Add Money"
+                  >
+                      <Plus className="h-4 w-4" />
+                  </Link>
               </div>
           )}
           <OfflineIndicator />

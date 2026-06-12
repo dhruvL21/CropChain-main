@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import Image from 'next/image';
 import { useCart, type CartItem } from '@/hooks/use-cart';
 import { Button } from '@/components/ui/button';
@@ -18,12 +19,12 @@ import { Badge } from '../ui/badge';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/hooks/use-language';
 import { getCropDisplayName } from '@/lib/get-crop-display-name';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, useDoc } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { collection, serverTimestamp, writeBatch, doc } from 'firebase/firestore';
+import { collection, serverTimestamp, writeBatch, doc, increment } from 'firebase/firestore';
 import { CheckoutPaymentDialog } from './checkout-payment-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { buildTransactionRecord, createTransactionId, upsertLocalTransactions } from '@/lib/transactions';
+import { buildTransactionRecord, createTransactionId } from '@/lib/transactions';
 
 export function CartSheet() {
   const { cartItems, removeItem, cartCount, clearCart } = useCart();
@@ -32,6 +33,15 @@ export function CartSheet() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+
+  const buyerProfileRef = useMemo(() => {
+    if (buyer?.uid && firestore) {
+      return doc(firestore, 'users', buyer.uid);
+    }
+    return null;
+  }, [buyer?.uid, firestore]);
+
+  const { data: userProfile } = useDoc<{ balance?: number; firstName?: string; lastName?: string }>(buyerProfileRef);
 
   const totalCartAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
@@ -54,10 +64,30 @@ export function CartSheet() {
         return;
     }
 
+    const currentBalance = userProfile?.balance ?? 0;
+    if (currentBalance < totalCartAmount) {
+        toast({
+            title: t('common.error') || 'Error',
+            description: `Insufficient wallet balance. Your balance is ₹${currentBalance.toFixed(0)}, but your order total is ₹${totalCartAmount.toFixed(2)}. Please add money to your wallet on the Transactions page.`,
+            variant: "destructive"
+        });
+        return;
+    }
+
     const marketplaceItems = cartItems.filter(item => !!item.userId);
     const shopItems = cartItems.filter(item => !item.userId);
 
     try {
+        // Import updateDoc dynamically or make sure it's referenced
+        const { updateDoc } = await import('firebase/firestore');
+
+        // Deduct balance from buyer in Firestore first
+        const buyerRef = doc(firestore, 'users', buyer.uid);
+        await updateDoc(buyerRef, {
+            balance: increment(-totalCartAmount),
+            updatedAt: serverTimestamp()
+        });
+
         if (marketplaceItems.length > 0) {
             const itemsByFarmer = marketplaceItems.reduce((acc, item) => {
                 const farmerId = item.userId!;
@@ -128,60 +158,69 @@ export function CartSheet() {
                     createdAt: serverTimestamp(),
                 });
 
-                await batch.commit();
-
-                const now = new Date().toISOString();
-                upsertLocalTransactions(items.map((item) => {
+                // 4. Create shared transaction records in Firestore for each item!
+                items.forEach((item) => {
                   const amount = item.price * item.quantity;
-                  return buildTransactionRecord({
+                  const txnRef = doc(collection(firestore, 'transactions'));
+                  
+                  const record = {
                     id: createTransactionId('CHK'),
-                    type: 'retail_order',
+                    type: 'retail_order' as const,
                     cropName: item.name,
                     quantity: item.quantity,
                     unit: item.unit || 'unit',
                     unitPrice: item.price,
                     totalAmount: amount,
                     farmerId,
-                    farmerName: 'Farmer',
+                    farmerName: 'Farmer', // resolved dynamically on display
                     buyerId: buyer.uid,
-                    buyerName: buyer.displayName || 'Anonymous Buyer',
-                    status: amount > 0 ? 'in_escrow' : 'pending',
-                    verificationStatus: 'partially_verified',
-                    paymentMode: amount > 0 ? 'Escrow simulation' : 'Sample request',
+                    buyerName: [userProfile?.firstName, userProfile?.lastName].filter(Boolean).join(' ') || buyer.displayName || 'Anonymous Buyer',
+                    status: amount > 0 ? ('in_escrow' as const) : ('pending' as const),
+                    verificationStatus: 'partially_verified' as const,
+                    paymentMode: amount > 0 ? 'Escrow payment' : 'Sample request',
                     referenceNumber: orderRef.id,
                     orderId: orderRef.id,
-                    source: 'checkout',
-                    createdAt: now,
-                    updatedAt: now,
-                  });
-                }));
+                    source: 'checkout' as const,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                  };
+                  
+                  batch.set(txnRef, buildTransactionRecord(record));
+                });
+
+                await batch.commit();
             }
         }
 
         if (shopItems.length > 0) {
-            const now = new Date().toISOString();
-            upsertLocalTransactions(shopItems.map((item) => {
+            const shopBatch = writeBatch(firestore);
+            shopItems.forEach((item) => {
               const amount = item.price * item.quantity;
-              return buildTransactionRecord({
+              const txnRef = doc(collection(firestore, 'transactions'));
+              
+              const record = {
                 id: createTransactionId('SHOP'),
-                type: 'shop_purchase',
+                type: 'shop_purchase' as const,
                 cropName: getTranslatedItemName(item),
                 quantity: item.quantity,
                 unit: item.unit || 'unit',
                 unitPrice: item.price,
                 totalAmount: amount,
                 buyerId: buyer.uid,
-                buyerName: buyer.displayName || 'Current user',
+                buyerName: [userProfile?.firstName, userProfile?.lastName].filter(Boolean).join(' ') || buyer.displayName || 'Current user',
                 farmerName: 'CropChain Shop',
-                status: 'paid',
-                verificationStatus: 'verified',
-                paymentMode: 'Wallet / checkout simulation',
+                status: 'paid' as const,
+                verificationStatus: 'verified' as const,
+                paymentMode: 'Wallet Balance',
                 referenceNumber: createTransactionId('SHOPREF'),
-                source: 'checkout',
-                createdAt: now,
-                updatedAt: now,
-              });
-            }));
+                source: 'checkout' as const,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              };
+              
+              shopBatch.set(txnRef, buildTransactionRecord(record));
+            });
+            await shopBatch.commit();
         }
         
         // Determine which toast to show
@@ -207,7 +246,7 @@ export function CartSheet() {
             variant: "destructive",
         });
     }
-};
+  };
 
   return (
     <Sheet>

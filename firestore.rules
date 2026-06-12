@@ -249,5 +249,17 @@ service cloud.firestore {
       allow update: if isSignedIn() && (resource.data.buyerId == request.auth.uid || resource.data.farmerId == request.auth.uid);
       allow delete: if false;
     }
+
+    /**
+     * @description Controls access to transactions.
+     * @path /transactions/{transactionId}
+     */
+    match /transactions/{transactionId} {
+      allow list: if isSignedIn() && (resource.data.buyerId == request.auth.uid || resource.data.farmerId == request.auth.uid || request.query.get('buyerId') == request.auth.uid || request.query.get('farmerId') == request.auth.uid);
+      allow read: if isSignedIn() && (resource.data.buyerId == request.auth.uid || resource.data.farmerId == request.auth.uid);
+      allow create: if isSignedIn() && (request.resource.data.buyerId == request.auth.uid || request.resource.data.farmerId == request.auth.uid);
+      allow update: if isSignedIn() && (resource.data.buyerId == request.auth.uid || resource.data.farmerId == request.auth.uid);
+      allow delete: if false;
+    }
   }
 }
