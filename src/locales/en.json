@@ -5,8 +5,7 @@
     "shop": "Shop",
     "myListings": "My Listings",
     "marketplace": "Marketplace",
-    "myOffers": "My Offers",
-    "transactions": "Transactions"
+    "myOffers": "My Offers"
   },
   "common": {
     "loading": "Loading...",

@@ -50,13 +50,3 @@ export const sampleOrders = [
     { id: 'order-04', userId: '', orderDate: new Date(2024, 3, 10).toISOString(), totalAmount: 32.00, status: 'Delivered', shippingAddress: '123 Farm Rd, Greenland', billingAddress: '123 Farm Rd, Greenland' },
     { id: 'order-05', userId: '', orderDate: new Date(2024, 4, 21).toISOString(), totalAmount: 35.99, status: 'Delivered', shippingAddress: '123 Farm Rd, Greenland', billingAddress: '123 Farm Rd, Greenland' },
 ];
-
-export const sampleTransactions = [
-    { id: 'tran-01', userId: '', transactionDate: new Date(2024, 0, 15).toISOString(), transactionType: 'Purchase', amount: 71.49, description: 'Order order-01' },
-    { id: 'tran-02', userId: '', transactionDate: new Date(2024, 1, 20).toISOString(), transactionType: 'Purchase', amount: 15000.00, description: 'Order order-02' },
-    { id: 'tran-03', userId: '', transactionDate: new Date(2024, 2, 5).toISOString(), transactionType: 'Purchase', amount: 19.99, description: 'Order order-03' },
-    { id: 'tran-04', userId: '', transactionDate: new Date(2024, 2, 15).toISOString(), transactionType: 'Sale', amount: 4000.00, description: 'Sale of Organic Wheat' },
-    { id: 'tran-05', userId: '', transactionDate: new Date(2024, 3, 10).toISOString(), transactionType: 'Purchase', amount: 32.00, description: 'Order order-04' },
-    { id: 'tran-06', userId: '', transactionDate: new Date(2024, 4, 1).toISOString(), transactionType: 'Sale', amount: 5000.00, description: 'Sale of Sweet Corn' },
-    { id: 'tran-07', userId: '', transactionDate: new Date(2024, 4, 21).toISOString(), transactionType: 'Purchase', amount: 35.99, description: 'Order order-05' },
-];

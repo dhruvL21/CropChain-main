@@ -69,11 +69,6 @@ const allLinks = [
     labelKey: 'nav.myOffers',
     icon: Handshake,
   },
-  {
-    href: '/dashboard/transactions',
-    labelKey: 'nav.transactions',
-    icon: Landmark,
-  },
 ] as const;
 
 export function Header({ userProfile }: { userProfile?: UserProfile | null }) {
@@ -84,10 +79,10 @@ export function Header({ userProfile }: { userProfile?: UserProfile | null }) {
 
   const mainLinks = useMemo(() => {
     if (userRole === 'farmer') {
-      return allLinks.filter(link => ['/dashboard', '/dashboard/schemes', '/dashboard/shop', '/dashboard/my-listings', '/dashboard/transactions'].includes(link.href));
+      return allLinks.filter(link => ['/dashboard', '/dashboard/schemes', '/dashboard/shop', '/dashboard/my-listings'].includes(link.href));
     }
     if (userRole === 'buyer') {
-      return allLinks.filter(link => ['/dashboard/marketplace', '/dashboard/my-offers', '/dashboard/transactions'].includes(link.href));
+      return allLinks.filter(link => ['/dashboard/marketplace', '/dashboard/my-offers'].includes(link.href));
     }
     return [];
   }, [userRole]);
