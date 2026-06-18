@@ -30,7 +30,30 @@ const AiSalesPriceOptimizerOutputSchema = z.object({
 });
 export type AiSalesPriceOptimizerOutput = z.infer<typeof AiSalesPriceOptimizerOutputSchema>;
 
+function getSimulatedPricing(input: AiSalesPriceOptimizerInput): AiSalesPriceOptimizerOutput {
+  const basePrice = input.wholesaleRetail === 'wholesale' ? 35.00 : 55.00;
+  const gradeMultiplier = input.qualityGrade === 'premium' ? 1.4 : input.qualityGrade === 'standard' ? 1.0 : 0.7;
+  const demandMultiplier = input.marketDemand === 'high' ? 1.25 : input.marketDemand === 'medium' ? 1.0 : 0.8;
+  const supplyMultiplier = input.supplyLevel === 'high' ? 0.85 : input.supplyLevel === 'medium' ? 1.0 : 1.2;
+  
+  const suggestedPrice = Math.round(basePrice * gradeMultiplier * demandMultiplier * supplyMultiplier * 100) / 100;
+  
+  const pricingStrategyExplanation = input.language === 'hi' 
+    ? `सुझाया गया मूल्य ₹${suggestedPrice.toFixed(2)} प्रति इकाई है। यह ${input.cropType} के लिए वर्तमान बाजार स्थितियों पर आधारित है, जहां मांग ${input.marketDemand} है और आपूर्ति ${input.supplyLevel} है। गुणवत्ता ग्रेड ${input.qualityGrade} होने के कारण इसे अतिरिक्त मूल्य प्राप्त हुआ है।`
+    : `The suggested price is ₹${suggestedPrice.toFixed(2)} per unit. This strategy is based on current market dynamics for ${input.cropType} showing ${input.marketDemand} demand and ${input.supplyLevel} supply. The quality grade is evaluated as ${input.qualityGrade}, justifying this optimized price point to maximize returns while staying competitive in the marketplace.`;
+
+  return {
+    suggestedPrice,
+    pricingStrategyExplanation,
+  };
+}
+
 export async function aiSalesPriceOptimizer(input: AiSalesPriceOptimizerInput): Promise<AiSalesPriceOptimizerOutput> {
+  const currentKey = (process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY || '').trim();
+  if (!currentKey || currentKey === 'PLACEHOLDER_KEY' || currentKey.includes('YOUR_') || currentKey.includes('PLACEHOLDER')) {
+    return getSimulatedPricing(input);
+  }
+
   return aiSalesPriceOptimizerFlow(input);
 }
 
@@ -38,7 +61,7 @@ const prompt = ai.definePrompt({
   name: 'aiSalesPriceOptimizerPrompt',
   input: {schema: AiSalesPriceOptimizerInputSchema},
   output: {schema: AiSalesPriceOptimizerOutputSchema},
-  prompt: `You are an AI-powered pricing strategist for agricultural products. Analyze the following market conditions and suggest an optimal price per unit for the specified crop, along with a concise explanation of your pricing strategy.
+  prompt: `You are an AI-powered pricing strategist for agricultural products in India. Analyze the following market conditions and suggest an optimal price per unit for the specified crop, along with a concise explanation of your pricing strategy.
 
 Crop Type: {{{cropType}}}
 Market Demand: {{{marketDemand}}}
@@ -49,11 +72,15 @@ Sales Model: {{{wholesaleRetail}}}
 
 Consider factors such as demand, supply, historical prices, and quality to determine the best pricing strategy. Provide a brief but effective explanation of your reasoning so the farmer understands the suggestion.
 
-IMPORTANT: The explanation must be written in the language corresponding to this code: {{{language}}}.
+IMPORTANT:
+- The suggested price and all monetary values must be in Indian Rupees (₹).
+- Do not suggest low single-digit dollar values (like 3.29). Use realistic Indian Rupee prices (e.g., ₹20, ₹50, ₹150 etc.).
+- Never use the dollar sign ($) anywhere in your output (neither in the suggested price nor in the explanation). Always use the Rupee symbol (₹) or "INR" for currency.
+- The explanation must be written in the language corresponding to this code: {{{language}}}.
 
-Based on your analysis, provide a suggested price per unit and a concise explanation of your pricing strategy:
+Based on your analysis, provide a suggested price per unit in Rupees (₹) and a concise explanation of your pricing strategy:
 
-Suggested Price:`,
+Suggested Price (in ₹):`,
   config: {
     safetySettings: [
       {
@@ -83,7 +110,26 @@ const aiSalesPriceOptimizerFlow = ai.defineFlow(
     outputSchema: AiSalesPriceOptimizerOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    let lastError: any = null;
+    const maxAttempts = 3;
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const {output} = await prompt(input);
+        if (output) return output;
+      } catch (error) {
+        lastError = error;
+        console.warn(`Gemini API call failed (attempt ${attempt}/${maxAttempts}):`, error);
+        if (attempt < maxAttempts) {
+          // Exponential backoff delay: 1s, 2s
+          const delay = Math.pow(2, attempt - 1) * 1000;
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+    
+    // In case the API is completely down (503 Service Unavailable), fallback gracefully to the simulator
+    console.error(`Gemini API failed after ${maxAttempts} attempts. Gracefully falling back to simulated pricing.`, lastError);
+    return getSimulatedPricing(input);
   }
 );

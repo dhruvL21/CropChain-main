@@ -5,8 +5,7 @@
     "shop": "Shop",
     "myListings": "My Listings",
     "marketplace": "Marketplace",
-    "myOffers": "My Offers",
-    "transactions": "Transactions"
+    "myOffers": "My Offers"
   },
   "common": {
     "loading": "Loading...",
@@ -379,7 +378,8 @@
     "rice": "Rice",
     "apples": "Apples",
     "lettuce": "Lettuce",
-    "soybeans": "Soybeans"
+    "soybeans": "Soybeans",
+    "red pepper": "Red Pepper"
   },
   "pwa": {
     "offlineTitle": "You are offline",

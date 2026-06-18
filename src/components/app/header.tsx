@@ -11,7 +11,6 @@ import {
   Handshake,
   Landmark,
   Wallet,
-  ReceiptText,
   Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -71,11 +70,6 @@ const allLinks = [
     labelKey: 'nav.myOffers',
     icon: Handshake,
   },
-  {
-    href: '/dashboard/transactions',
-    labelKey: 'nav.transactions',
-    icon: ReceiptText,
-  },
 ] as const;
 
 export function Header({ userProfile }: { userProfile?: UserProfile | null }) {
@@ -86,10 +80,10 @@ export function Header({ userProfile }: { userProfile?: UserProfile | null }) {
 
   const mainLinks = useMemo(() => {
     if (userRole === 'farmer') {
-      return allLinks.filter(link => ['/dashboard', '/dashboard/schemes', '/dashboard/shop', '/dashboard/my-listings', '/dashboard/transactions'].includes(link.href));
+      return allLinks.filter(link => ['/dashboard', '/dashboard/schemes', '/dashboard/shop', '/dashboard/my-listings'].includes(link.href));
     }
     if (userRole === 'buyer') {
-      return allLinks.filter(link => ['/dashboard/marketplace', '/dashboard/my-offers', '/dashboard/transactions'].includes(link.href));
+      return allLinks.filter(link => ['/dashboard/marketplace', '/dashboard/my-offers'].includes(link.href));
     }
     return [];
   }, [userRole]);
@@ -135,7 +129,7 @@ export function Header({ userProfile }: { userProfile?: UserProfile | null }) {
                       <span className="text-sm font-bold text-primary">₹{userProfile.balance?.toFixed(0) || '0'}</span>
                   </div>
                   <Link
-                      href="/dashboard/transactions"
+                      href="/dashboard/profile"
                       className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 shadow-sm transition-all hover:scale-105"
                       title="Add Money"
                   >

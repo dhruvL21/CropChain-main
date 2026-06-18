@@ -21,7 +21,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { buildTransactionRecord, createTransactionId, upsertLocalTransactions } from '@/lib/transactions';
 
 interface UserProfile {
   id: string;
@@ -64,7 +63,6 @@ export default function ProfilePage() {
     const { toast } = useToast();
     const [isAddMoneyOpen, setIsAddMoneyOpen] = useState(false);
     const [topUpAmount, setTopUpAmount] = useState('');
-    const [topUpReference, setTopUpReference] = useState('');
     const [isAddingMoney, setIsAddingMoney] = useState(false);
 
     const userProfileRef = useMemo(() => {
@@ -141,32 +139,7 @@ export default function ProfilePage() {
                 balance: increment(amount),
             });
 
-            const now = new Date().toISOString();
-            const referenceNumber = topUpReference.trim() || createTransactionId('WALLETREF');
-            upsertLocalTransactions([
-                buildTransactionRecord({
-                    id: createTransactionId('WALLET'),
-                    type: 'wallet_top_up',
-                    cropName: 'Wallet top-up',
-                    quantity: 1,
-                    unit: 'top-up',
-                    unitPrice: amount,
-                    totalAmount: amount,
-                    farmerName: 'Wallet',
-                    buyerId: user.uid,
-                    buyerName: displayName || user.email || 'Current user',
-                    status: 'paid',
-                    verificationStatus: 'verified',
-                    paymentMode: 'Manual top-up simulation',
-                    referenceNumber,
-                    source: 'wallet',
-                    createdAt: now,
-                    updatedAt: now,
-                }),
-            ]);
-
             setTopUpAmount('');
-            setTopUpReference('');
             setIsAddMoneyOpen(false);
             toast({
                 title: 'Money added',
@@ -296,15 +269,7 @@ export default function ProfilePage() {
                                                         placeholder="1000"
                                                     />
                                                 </div>
-                                                <div className="grid gap-2">
-                                                    <Label htmlFor="walletReference">Reference</Label>
-                                                    <Input
-                                                        id="walletReference"
-                                                        value={topUpReference}
-                                                        onChange={(event) => setTopUpReference(event.target.value)}
-                                                        placeholder="Cash receipt, UPI ref, or note"
-                                                    />
-                                                </div>
+
                                                 <DialogFooter>
                                                     <Button type="submit" disabled={isAddingMoney}>
                                                         {isAddingMoney ? 'Adding...' : 'Confirm Top-Up'}

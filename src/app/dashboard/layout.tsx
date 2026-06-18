@@ -50,7 +50,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (userProfile) {
-      const buyerAllowedPaths = ['/dashboard/marketplace', '/dashboard/my-offers', '/dashboard/transactions', '/dashboard/profile', '/dashboard/settings'];
+      const buyerAllowedPaths = ['/dashboard/marketplace', '/dashboard/my-offers', '/dashboard/profile', '/dashboard/settings'];
       if (userProfile.role === 'buyer' && !buyerAllowedPaths.includes(pathname)) {
         router.push('/dashboard/marketplace');
       } else if (userProfile.role === 'farmer' && pathname === '/dashboard/marketplace') {

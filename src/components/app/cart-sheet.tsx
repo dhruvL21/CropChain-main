@@ -24,7 +24,6 @@ import { useToast } from '@/hooks/use-toast';
 import { collection, serverTimestamp, writeBatch, doc, increment } from 'firebase/firestore';
 import { CheckoutPaymentDialog } from './checkout-payment-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { buildTransactionRecord, createTransactionId } from '@/lib/transactions';
 
 export function CartSheet() {
   const { cartItems, removeItem, cartCount, clearCart } = useCart();
@@ -68,7 +67,7 @@ export function CartSheet() {
     if (currentBalance < totalCartAmount) {
         toast({
             title: t('common.error') || 'Error',
-            description: `Insufficient wallet balance. Your balance is ₹${currentBalance.toFixed(0)}, but your order total is ₹${totalCartAmount.toFixed(2)}. Please add money to your wallet on the Transactions page.`,
+            description: `Insufficient wallet balance. Your balance is ₹${currentBalance.toFixed(0)}, but your order total is ₹${totalCartAmount.toFixed(2)}. Please add money to your wallet on the Profile page.`,
             variant: "destructive"
         });
         return;
@@ -158,71 +157,10 @@ export function CartSheet() {
                     createdAt: serverTimestamp(),
                 });
 
-                // 4. Create shared transaction records in Firestore for each item!
-                items.forEach((item) => {
-                  const amount = item.price * item.quantity;
-                  const txnRef = doc(collection(firestore, 'transactions'));
-                  
-                  const record = {
-                    id: createTransactionId('CHK'),
-                    type: 'retail_order' as const,
-                    cropName: item.name,
-                    quantity: item.quantity,
-                    unit: item.unit || 'unit',
-                    unitPrice: item.price,
-                    totalAmount: amount,
-                    farmerId,
-                    farmerName: 'Farmer', // resolved dynamically on display
-                    buyerId: buyer.uid,
-                    buyerName: [userProfile?.firstName, userProfile?.lastName].filter(Boolean).join(' ') || buyer.displayName || 'Anonymous Buyer',
-                    status: amount > 0 ? ('in_escrow' as const) : ('pending' as const),
-                    verificationStatus: 'partially_verified' as const,
-                    paymentMode: amount > 0 ? 'Escrow payment' : 'Sample request',
-                    referenceNumber: orderRef.id,
-                    orderId: orderRef.id,
-                    source: 'checkout' as const,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                  };
-                  
-                  batch.set(txnRef, buildTransactionRecord(record));
-                });
-
                 await batch.commit();
             }
         }
 
-        if (shopItems.length > 0) {
-            const shopBatch = writeBatch(firestore);
-            shopItems.forEach((item) => {
-              const amount = item.price * item.quantity;
-              const txnRef = doc(collection(firestore, 'transactions'));
-              
-              const record = {
-                id: createTransactionId('SHOP'),
-                type: 'shop_purchase' as const,
-                cropName: getTranslatedItemName(item),
-                quantity: item.quantity,
-                unit: item.unit || 'unit',
-                unitPrice: item.price,
-                totalAmount: amount,
-                buyerId: buyer.uid,
-                buyerName: [userProfile?.firstName, userProfile?.lastName].filter(Boolean).join(' ') || buyer.displayName || 'Current user',
-                farmerName: 'CropChain Shop',
-                status: 'paid' as const,
-                verificationStatus: 'verified' as const,
-                paymentMode: 'Wallet Balance',
-                referenceNumber: createTransactionId('SHOPREF'),
-                source: 'checkout' as const,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              };
-              
-              shopBatch.set(txnRef, buildTransactionRecord(record));
-            });
-            await shopBatch.commit();
-        }
-        
         // Determine which toast to show
         if (marketplaceItems.length > 0) {
             toast({

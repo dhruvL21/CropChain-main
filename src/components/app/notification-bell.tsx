@@ -55,7 +55,7 @@ export function NotificationBell() {
             }
             if (notif.messageKey === 'notifications.newOrder') {
                 let buyerDisplayName = notif.messagePayload.buyerName;
-                if (!buyerDisplayName || buyerDisplayName.toLowerCase() === 'anonymous_buyer') {
+                if (!buyerDisplayName || buyerDisplayName.toLowerCase() === 'anonymous_buyer' || buyerDisplayName.toLowerCase() === 'anonymous buyer') {
                     buyerDisplayName = t('dashboard.anonymous_buyer');
                 }
                 
@@ -78,7 +78,7 @@ export function NotificationBell() {
             }
             if (notif.messageKey === 'notifications.newOfferReceived') {
                 let buyerDisplayName = notif.messagePayload.buyerName;
-                if (!buyerDisplayName || buyerDisplayName.toLowerCase() === 'anonymous_buyer') {
+                if (!buyerDisplayName || buyerDisplayName.toLowerCase() === 'anonymous_buyer' || buyerDisplayName.toLowerCase() === 'anonymous buyer') {
                     buyerDisplayName = t('dashboard.anonymous_buyer');
                 }
                 const cropName = getCropDisplayName(notif.messagePayload.cropName, t);

@@ -253,7 +253,7 @@ import { sampleOrders } from '@/lib/placeholder-data';
                                     offers.map((offer) => {
                                         const cropDisplayName = getCropDisplayName(offer.cropName, t);
                                         let buyerDisplayName = offer.buyerName;
-                                        if (!buyerDisplayName || buyerDisplayName.toLowerCase() === 'anonymous_buyer') {
+                                        if (!buyerDisplayName || buyerDisplayName.toLowerCase() === 'anonymous_buyer' || buyerDisplayName.toLowerCase() === 'anonymous buyer') {
                                             buyerDisplayName = t('dashboard.anonymous_buyer');
                                         }
 

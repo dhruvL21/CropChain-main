@@ -249,15 +249,5 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    /**
-     * @description Controls access to transactions.
-     * @path /transactions/{transactionId}
-     */
-    match /transactions/{transactionId} {
-      allow read, list: if isSignedIn() && (resource.data.buyerId == request.auth.uid || resource.data.farmerId == request.auth.uid);
-      allow create: if isSignedIn() && (request.resource.data.buyerId == request.auth.uid || request.resource.data.farmerId == request.auth.uid);
-      allow update: if isSignedIn() && (resource.data.buyerId == request.auth.uid || resource.data.farmerId == request.auth.uid);
-      allow delete: if false;
-    }
   }
 }
